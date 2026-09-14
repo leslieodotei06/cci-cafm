@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCI CAFM</title>
+<style>
+:root{
+  --bg1:#3d0a18; --bg2:#1a050e; --bg3:#0e0d20; --bg4:#1a0a32;
+  --primary:#c0142a; --primary-rgb:192,20,42; --header:#611426;
+  --glass-bg:rgba(255,255,255,0.08); --glass-bg-2:rgba(255,255,255,0.12);
+  --glass-border:rgba(255,255,255,0.13); --glass-blur:28px;
+  --sidebar-bg:rgba(16,4,10,0.55);
+  --text:#f5f0f2; --text-dim:rgba(245,240,242,0.62); --text-dim2:rgba(245,240,242,0.4);
+  --radius:16px; --radius-sm:10px;
+  --font:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --fs:14px;
+  --row-gap:10px;
+  --st-overdue:#e5484d; --st-duesoon:#f5a623; --st-watch:#f7d716; --st-compliant:#3fbb6d; --st-nodate:#9098a6;
+  --st-renewal:#5b8def; --st-quote:#b478e8;
+  --shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+[data-statusset="accessible"]{
+  --st-overdue:#0072B2; --st-duesoon:#E69F00; --st-watch:#56B4E9; --st-compliant:#009E73; --st-nodate:#8a8f98;
+}
+*{box-sizing:border-box; margin:0; padding:0; min-width:0;}
+html,body{height:100%;}
+body{
+  font-family:var(--font);
+  font-size:var(--fs);
+  color:var(--text);
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 15%, rgba(192,20,42,0.16), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 85% 80%, rgba(90,30,160,0.18), transparent 60%),
+    linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 35%, var(--bg3) 65%, var(--bg4) 100%);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.orb{position:fixed; border-radius:50%; filter:blur(70px); opacity:0.55; z-index:0; pointer-events:none;}
+.orb1{width:480px;height:480px; background:radial-gradient(circle, rgba(192,20,42,0.55), transparent 70%); top:-120px; left:-100px; animation:driftA 26s ease-in-out infinite;}
+.orb2{width:520px;height:520px; background:radial-gradient(circle, rgba(90,60,220,0.45), transparent 70%); bottom:-160px; right:-120px; animation:driftB 32s ease-in-out infinite;}
+@keyframes driftA{0%,100%{transform:translate(0,0);} 50%{transform:translate(60px,80px);}}
+@keyframes driftB{0%,100%{transform:translate(0,0);} 50%{transform:translate(-70px,-50px);}}
+
+.glass{
+  background:var(--glass-bg);
+  backdrop-filter:blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(140%);
+  border:0.5px solid var(--glass-border);
+  border-radius:var(--radius);
+  position:relative;
+  box-shadow:var(--shadow);
+}
+.glass::before{
+  content:"";
+  position:absolute; top:0; left:12%; right:12%; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  border-radius:1px;
+}
+
+[hidden]{display:none !important;}
+svg{width:16px; height:16px; flex-shrink:0; display:inline-block; vertical-align:middle;}
+svg.icon-lg{width:22px; height:22px;}
+svg.donut-svg{width:130px !important; height:130px !important;}
+button{font-family:inherit; cursor:pointer; background:none; border:none; color:inherit; padding:0; -webkit-appearance:none; appearance:none;}
+input,select,textarea{font-family:inherit; font-size:inherit; color:var(--text);}
+a{color:inherit;}
+
+/* ---------- Login ---------- */
+#login-screen{
+  position:fixed; inset:0; z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.login-card{width:100%; max-width:380px; padding:36px 32px; text-align:center;}
+.login-logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(145deg, var(--primary), var(--header)); margin:0 auto 18px; display:flex;align-items:center;justify-content:center; box-shadow:0 8px 24px rgba(192,20,42,0.4);}
+.login-title{font-size:20px; font-weight:700; letter-spacing:0.2px;}
+.login-sub{font-size:13px; color:var(--text-dim); margin-top:4px; margin-bottom:26px;}
+.field{text-align:left; margin-bottom:16px;}
+.field label{display:block; font-size:12px; color:var(--text-dim); margin-bottom:6px; font-weight:600; text-transform:uppercase; letter-spacing:0.4px;}
+.field select, .field input, .field textarea{
+  width:100%; padding:12px 14px; border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.06); border:0.5px solid var(--glass-border); color:var(--text); outline:none;
+}
+.field select:focus, .field input:focus, .field textarea:focus{border-color:rgba(var(--primary-rgb),0.7); background:rgba(255,255,255,0.09);}
+.field select option{background:#2a0e18; color:var(--text);}
+.field input[type=password]{letter-spacing:4px; font-size:18px;}
+.btn{
+  padding:11px 18px; border-radius:var(--radius-sm); border:0.5px solid var(--glass-border);
+  background:rgba(255,255,255,0.08); color:var(--text); font-size:13.5px; font-weight:600; transition:all .15s;
+}
+.btn:hover{background:rgba(255,255,255,0.14);}
+.btn-primary{background:linear-gradient(135deg, var(--primary), var(--header)); border-color:transparent; box-shadow:0 6px 18px rgba(var(--primary-rgb),0.35);}
+.btn-primary:hover{filter:brightness(1.08);}
+.btn-block{width:100%;}
+.btn-danger{background:rgba(229,72,77,0.18); border-color:rgba(229,72,77,0.4); color:#ff9296;}
+.btn-ghost{background:transparent;}
+.btn-sm{padding:7px 12px; font-size:12px;}
+.login-error{color:#ff9296; font-size:12.5px; margin-bottom:14px; min-height:1px;}
+
+/* ---------- App shell ---------- */
+#app{display:flex; min-height:100vh; position:relative; z-index:1;}
+#sidebar{
+  width:220px; flex:0 0 220px; background:var(--sidebar-bg); backdrop-filter:blur(30px);
+  -webkit-backdrop-filter:blur(30px); border-right:0.5px solid var(--glass-border);
+  display:flex; flex-direction:column; position:fixed; top:0; bottom:0; left:0; z-index:100;
+}
+.brand{display:flex; align-items:center; gap:10px; padding:20px 18px 16px;}
+.brand-logo{width:34px;height:34px;border-radius:10px; background:linear-gradient(145deg,var(--primary),var(--header)); flex:0 0 34px; display:flex;align-items:center;justify-content:center; overflow:hidden;}
+.brand-logo svg{width:20px;height:20px;}
+.login-logo svg{width:32px;height:32px;}
+.brand-logo img{width:100%;height:100%;object-fit:cover;}
+.brand-text{overflow:hidden;}
+.brand-name{font-weight:700; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.brand-strap{font-size:10.5px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+.nav-scroll{flex:1; overflow-y:auto; padding:6px 10px;}
+.nav-group{margin-top:14px;}
+.nav-group-label{font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim2); padding:0 10px 6px; font-weight:700;}
+.nav-item{
+  display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:11px; margin-bottom:3px;
+  color:var(--text-dim); font-size:13.2px; font-weight:500; border:0.5px solid transparent; transition:all .15s; position:relative;
+}
+.nav-item:hover{background:rgba(255,255,255,0.06); color:var(--text);}
+.nav-item.active{background:rgba(var(--primary-rgb),0.35); border-color:rgba(var(--primary-rgb),0.55); color:#fff; font-weight:600;}
+.nav-item svg{flex:0 0 16px; width:16px; height:16px;}
+.nav-item .badge{margin-left:auto; background:rgba(229,72,77,0.85); color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:8px;}
+
+.sidebar-footer{padding:12px; border-top:0.5px solid var(--glass-border);}
+.user-widget{display:flex; align-items:center; gap:10px; padding:8px; border-radius:12px;}
+.avatar{width:32px;height:32px;border-radius:50%; background:linear-gradient(145deg,var(--primary),var(--header)); display:flex;align-items:center;justify-content:center; font-size:12px; font-weight:700; flex:0 0 32px;}
+.user-widget-name{font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.user-widget-role{font-size:10.5px; color:var(--text-dim);}
+.signout-btn{margin-left:auto; width:28px;height:28px; border-radius:8px; display:flex;align-items:center;justify-content:center; background:rgba(255,255,255,0.06); border:0.5px solid var(--glass-border);}
+.signout-btn:hover{background:rgba(229,72,77,0.2);}
+
+#main{flex:1; margin-left:220px; display:flex; flex-direction:column; min-height:100vh; min-width:0;}
+#topbar{
+  position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:14px; padding:14px 26px;
+  background:rgba(20,8,16,0.45); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-bottom:0.5px solid var(--glass-border);
+}
+#topbar h1{font-size:18px; font-weight:700;}
+#topbar .top-sub{font-size:12px; color:var(--text-dim);}
+.topbar-spacer{flex:1;}
+#content{padding:22px 26px 60px; flex:1;}
+
+.mobile-toggle{display:none;}
+
+/* ---------- Cards / grids ---------- */
+.card{padding:18px;}
+.grid{display:grid; gap:14px;}
+.kpi-grid{grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:20px;}
+.kpi{padding:14px 16px; overflow:hidden; border-left:3px solid rgba(255,255,255,0.15);}
+.kpi.alert{border-left-color:var(--st-overdue);}
+.kpi.warn{border-left-color:var(--st-duesoon);}
+.kpi-glow{position:absolute; top:-30px; right:-30px; width:90px;height:90px; border-radius:50%; filter:blur(24px); opacity:0.5;}
+.kpi-num{font-size:26px; font-weight:800; line-height:1;}
+.kpi-label{font-size:11.5px; color:var(--text-dim); margin-top:6px; font-weight:600;}
+
+.panels-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;}
+.panel{padding:0; overflow:hidden;}
+.panel-head{padding:16px 18px; border-bottom:0.5px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between;}
+.panel-head h3{font-size:14.5px; font-weight:700;}
+.panel-body{padding:6px 8px;}
+.stat-row{display:flex; align-items:center; gap:12px; padding:9px 10px; border-radius:10px;}
+.stat-row:hover{background:rgba(255,255,255,0.05);}
+.chip{width:30px;height:30px;border-radius:9px; display:flex;align-items:center;justify-content:center; flex:0 0 30px;}
+.stat-row-label{font-size:13px; font-weight:500; flex:1;}
+.stat-row-count{font-size:14px; font-weight:700;}
+.stat-row-pct{font-size:11px; color:var(--text-dim); width:38px; text-align:right;}
+.panel-foot{padding:12px 18px; border-top:0.5px solid var(--glass-border); text-align:right;}
+.link-btn{background:none;border:none;color:var(--primary); font-size:12.5px; font-weight:700;}
+.link-btn:hover{text-decoration:underline;}
+
+.donuts-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;}
+.donut-card{padding:18px; display:flex; gap:18px; align-items:center;}
+.legend{display:flex; flex-direction:column; gap:6px; font-size:12px;}
+.legend-item{display:flex; align-items:center; gap:7px;}
+.legend-dot{width:9px;height:9px;border-radius:50%;}
+
+.urgent-list{padding:6px;}
+.urgent-item{display:flex; align-items:center; gap:12px; padding:11px 12px; border-left:3px solid var(--st-nodate); border-radius:10px; margin:4px 4px;}
+.urgent-item:hover{background:rgba(255,255,255,0.05); cursor:pointer;}
+.urgent-rank{font-size:11px; color:var(--text-dim2); width:16px; font-weight:700;}
+.urgent-main{flex:1; min-width:0;}
+.urgent-task{font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.urgent-sub{font-size:11px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+.pill{display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; background:rgba(255,255,255,0.08); border:0.5px solid var(--glass-border); white-space:nowrap;}
+.pill-dot{width:7px;height:7px;border-radius:50%;}
+.pill-overdue{color:var(--st-overdue);} .pill-overdue .pill-dot{background:var(--st-overdue);}
+.pill-duesoon{color:var(--st-duesoon);} .pill-duesoon .pill-dot{background:var(--st-duesoon);}
+.pill-watch{color:var(--st-watch);} .pill-watch .pill-dot{background:var(--st-watch);}
+.pill-compliant{color:var(--st-compliant);} .pill-compliant .pill-dot{background:var(--st-compliant);}
+.pill-nodate{color:var(--st-nodate);} .pill-nodate .pill-dot{background:var(--st-nodate);}
+
+/* ---------- Toolbar / table ---------- */
+.toolbar{display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;}
+.search-input{padding:9px 14px; border-radius:20px; background:rgba(255,255,255,0.07); border:0.5px solid var(--glass-border); min-width:220px; outline:none;}
+.filter-chip{padding:7px 13px; border-radius:16px; background:rgba(255,255,255,0.06); border:0.5px solid var(--glass-border); font-size:12px; color:var(--text-dim); font-weight:600;}
+.filter-chip.active{background:rgba(var(--primary-rgb),0.35); border-color:rgba(var(--primary-rgb),0.6); color:#fff;}
+.tb-spacer{flex:1;}
+
+.table-wrap{overflow-x:auto; border-radius:var(--radius);}
+table{width:100%; border-collapse:collapse; font-size:12.8px;}
+thead th{text-align:left; padding:11px 12px; color:var(--text-dim); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; border-bottom:0.5px solid var(--glass-border); white-space:nowrap;}
+tbody tr{border-bottom:0.5px solid rgba(255,255,255,0.06); transition:background .12s;}
+tbody tr:hover{background:rgba(255,255,255,0.05); cursor:pointer;}
+tbody td{padding:10px 12px; white-space:nowrap;}
+td.wrap{white-space:normal;}
+.row-del{opacity:0; background:rgba(229,72,77,0.15); border:0.5px solid rgba(229,72,77,0.4); color:#ff9296; width:24px;height:24px;border-radius:7px; font-size:13px; line-height:1;}
+tbody tr:hover .row-del{opacity:1;}
+.checkbox-cell{width:34px;}
+
+.bulk-bar{
+  position:sticky; bottom:14px; margin-top:14px; padding:12px 18px; display:flex; align-items:center; gap:14px;
+  background:rgba(var(--primary-rgb),0.35); border:0.5px solid rgba(var(--primary-rgb),0.55); backdrop-filter:blur(24px);
+  border-radius:var(--radius); animation:slideUp .2s ease;
+}
+@keyframes slideUp{from{transform:translateY(16px); opacity:0;} to{transform:translateY(0);opacity:1;}}
+
+/* ---------- Drawer / overlay / modal / toast ---------- */
+#overlay{position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:400; opacity:0; pointer-events:none; transition:opacity .2s;}
+#overlay.show{opacity:1; pointer-events:auto;}
+#drawer{
+  position:fixed; top:0; right:0; bottom:0; width:440px; max-width:92vw; z-index:410;
+  background:rgba(14,6,12,0.72); backdrop-filter:blur(34px) saturate(150%); -webkit-backdrop-filter:blur(34px) saturate(150%);
+  border-left:0.5px solid var(--glass-border); transform:translateX(100%); transition:transform .25s cubic-bezier(.2,.8,.2,1);
+  display:flex; flex-direction:column; box-shadow:-10px 0 40px rgba(0,0,0,0.4);
+}
+#drawer.open{transform:translateX(0);}
+.drawer-head{padding:20px 22px 14px; border-bottom:0.5px solid var(--glass-border);}
+.drawer-head-row{display:flex; align-items:center; justify-content:space-between;}
+.drawer-title{font-size:16.5px; font-weight:700;}
+.drawer-sub{font-size:12px; color:var(--text-dim); margin-top:5px;}
+.drawer-close{width:28px;height:28px;border-radius:8px; background:rgba(255,255,255,0.06); border:0.5px solid var(--glass-border); display:flex;align-items:center;justify-content:center;}
+.drawer-body{flex:1; overflow-y:auto; padding:18px 22px;}
+.drawer-foot{padding:16px 22px; border-top:0.5px solid var(--glass-border); display:flex; gap:10px;}
+.drawer-foot .btn{flex:1;}
+.form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.form-grid .full{grid-column:1/-1;}
+.field textarea{resize:vertical; min-height:70px;}
+
+#modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px;}
+.modal{width:100%; max-width:420px; padding:24px;}
+.modal h3{font-size:16px; margin-bottom:8px;}
+.modal p{font-size:13px; color:var(--text-dim); margin-bottom:18px; line-height:1.5;}
+.modal-actions{display:flex; gap:10px; justify-content:flex-end;}
+
+#toast-stack{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:600; display:flex; flex-direction:column; gap:8px; align-items:center;}
+.toast{padding:11px 18px; border-radius:12px; font-size:13px; font-weight:600; animation:toastIn .2s ease; display:flex; align-items:center; gap:10px;}
+@keyframes toastIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+
+/* ---------- Calendar ---------- */
+.cal-layout{display:grid; grid-template-columns:1fr 300px; gap:16px; min-width:0;}
+.cal-layout>div{min-width:0;}
+.cal-toolbar{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+.cal-title{font-size:16px; font-weight:700; min-width:170px;}
+.cal-nav-btn{width:32px;height:32px;padding:0;border-radius:9px; display:flex;align-items:center;justify-content:center;}
+.cal-nav-btn svg{width:16px;height:16px;}
+.month-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:rgba(255,255,255,0.06); border-radius:var(--radius); overflow:hidden; border:0.5px solid var(--glass-border);}
+.month-head{padding:8px; text-align:center; font-size:10.5px; font-weight:700; color:var(--text-dim); background:rgba(255,255,255,0.03); text-transform:uppercase;}
+.month-cell{background:rgba(10,4,8,0.35); min-height:96px; min-width:0; padding:6px; display:flex; flex-direction:column; gap:3px; cursor:pointer; overflow:hidden;}
+.month-cell:hover{background:rgba(255,255,255,0.05);}
+.month-cell.other{opacity:0.35;}
+.month-cell.selected{outline:1.5px solid var(--primary); outline-offset:-1.5px;}
+.cell-date{width:22px;height:22px; border-radius:50%; display:flex;align-items:center;justify-content:center; font-size:11.5px; font-weight:600;}
+.cell-date.today{background:linear-gradient(135deg,var(--primary),var(--header)); color:#fff;}
+.evt-chip{font-size:9.5px; padding:2px 5px; border-radius:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600;}
+.evt-more{font-size:9.5px; color:var(--text-dim); padding:1px 4px;}
+
+.week-grid{display:grid; grid-template-columns:44px repeat(7,1fr); border:0.5px solid var(--glass-border); border-radius:var(--radius); overflow:hidden;}
+.week-head-cell{padding:8px 4px; text-align:center; font-size:10.5px; font-weight:700; background:rgba(255,255,255,0.04); border-bottom:0.5px solid var(--glass-border);}
+.week-time{font-size:9.5px; color:var(--text-dim2); padding:4px; text-align:right; border-right:0.5px solid var(--glass-border);}
+.week-cell{min-height:44px; min-width:0; border-right:0.5px solid rgba(255,255,255,0.05); border-bottom:0.5px solid rgba(255,255,255,0.05); padding:2px; overflow:hidden;}
+
+.mini-month{padding:14px;}
+.mini-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:2px; font-size:10px; text-align:center;}
+.mini-grid div{padding:4px 0; border-radius:6px;}
+.mini-day{cursor:pointer;}
+.mini-day:hover{background:rgba(255,255,255,0.08);}
+.mini-day.today{background:rgba(var(--primary-rgb),0.4); font-weight:700;}
+
+.day-panel{padding:16px;}
+.day-panel h4{font-size:13.5px; margin-bottom:10px;}
+.day-evt{padding:9px 10px; border-radius:10px; margin-bottom:6px; font-size:12px; cursor:pointer; border-left:3px solid;}
+.day-evt:hover{background:rgba(255,255,255,0.06);}
+
+.cal-summary{display:flex; gap:14px; margin-top:14px; flex-wrap:wrap;}
+.summary-pill{padding:8px 14px; font-size:12px; font-weight:600;}
+
+/* ---------- Add asset ---------- */
+.mode-toggle{display:inline-flex; padding:3px; border-radius:14px; margin-bottom:18px;}
+.mode-btn{padding:8px 16px; border-radius:11px; font-size:12.5px; font-weight:600; background:none; border:none; color:var(--text-dim);}
+.mode-btn.active{background:rgba(var(--primary-rgb),0.4); color:#fff;}
+.added-list{margin-top:16px;}
+.added-item{display:flex; align-items:center; gap:12px; padding:10px 14px; margin-bottom:6px;}
+.preview-table{margin-top:14px;}
+.remove-banner{padding:14px 18px; display:flex; align-items:center; gap:14px; margin-bottom:18px; border-left:3px solid var(--st-duesoon);}
+.quick-add-row{display:flex; gap:10px; margin-top:24px; flex-wrap:wrap;}
+
+/* ---------- Cost analysis ---------- */
+.cost-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.cost-card{padding:18px;}
+.cost-card h3{font-size:14px; margin-bottom:12px;}
+.cost-row{display:flex; justify-content:space-between; padding:7px 0; font-size:12.5px; border-bottom:0.5px solid rgba(255,255,255,0.06);}
+.cost-row b{font-weight:700;}
+.bar-track{height:7px; border-radius:5px; background:rgba(255,255,255,0.08); overflow:hidden; margin-top:4px;}
+.bar-fill{height:100%; border-radius:5px;}
+
+/* ---------- Appearance ---------- */
+.appearance-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.swatch-row{display:flex; gap:10px; flex-wrap:wrap;}
+.swatch{width:52px;height:52px;border-radius:14px; border:2px solid transparent; cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center;}
+.swatch.selected{border-color:#fff;}
+.opt-pill-row{display:flex; gap:8px; flex-wrap:wrap;}
+.opt-pill{padding:8px 14px; border-radius:12px; font-size:12px; font-weight:600; background:rgba(255,255,255,0.06); border:0.5px solid var(--glass-border); color:var(--text-dim);}
+.opt-pill.selected{background:rgba(var(--primary-rgb),0.4); color:#fff; border-color:rgba(var(--primary-rgb),0.6);}
+.logo-drop{border:1.5px dashed var(--glass-border); border-radius:14px; padding:22px; text-align:center; font-size:12px; color:var(--text-dim); cursor:pointer;}
+
+/* ---------- User management ---------- */
+.user-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px;}
+.user-card{padding:16px; text-align:center;}
+.user-card .avatar{width:52px;height:52px; font-size:16px; margin:0 auto 10px;}
+.role-badge{display:inline-block; font-size:10px; font-weight:700; padding:3px 9px; border-radius:10px; margin-top:6px; text-transform:uppercase; letter-spacing:0.4px;}
+.role-badge.admin{background:rgba(var(--primary-rgb),0.35); color:#ffb3bd;}
+.role-badge.staff{background:rgba(91,141,239,0.3); color:#9ec1ff;}
+.pin-warn{font-size:10.5px; color:var(--st-duesoon); margin-top:6px;}
+.user-card-actions{display:flex; gap:6px; margin-top:12px;}
+.perm-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;}
+.perm-item{display:flex; align-items:center; gap:8px; font-size:12px; padding:6px 8px; border-radius:8px; background:rgba(255,255,255,0.04);}
+
+/* ---------- Guide ---------- */
+.guide-prose{max-width:760px; line-height:1.7; font-size:13.5px; color:var(--text-dim);}
+.guide-prose h3{color:var(--text); font-size:15px; margin:22px 0 8px;}
+.guide-prose ol,.guide-prose ul{margin-left:20px; margin-bottom:10px;}
+.guide-prose li{margin-bottom:4px;}
+.settings-num-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:16px 0 24px;}
+.danger-zone{margin-top:24px; padding:16px; border:0.5px solid rgba(229,72,77,0.3);}
+.data-actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+
+/* ---------- Responsive ---------- */
+@media (max-width:980px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr);}
+  .panels-row, .donuts-row, .cost-grid, .cal-layout{grid-template-columns:1fr;}
+  .appearance-grid{grid-template-columns:1fr;}
+}
+@media print{
+  #sidebar, #topbar, #overlay, #drawer, #modal-overlay, #toast-stack, .toolbar, .quick-add-row, .mode-toggle{display:none !important;}
+  #main{margin-left:0 !important;}
+  body{background:#fff !important; color:#111 !important;}
+  .glass{background:#fff !important; border:1px solid #ccc !important; box-shadow:none !important; backdrop-filter:none !important;}
+}
+@media (max-width:760px){
+  #sidebar{position:fixed; left:0; right:0; top:0; bottom:auto; width:100%; height:64px; flex-direction:row; border-right:none; border-bottom:0.5px solid var(--glass-border);}
+  .brand{padding:0 12px;}
+  .brand-strap{display:none;}
+  .nav-scroll{display:flex; flex-direction:row; overflow-x:auto; padding:8px 6px; flex:1;}
+  .nav-group{margin-top:0; display:flex; gap:4px; flex-shrink:0;}
+  .nav-group-label{display:none;}
+  .nav-item{flex-direction:column; gap:2px; font-size:9.5px; padding:6px 10px; white-space:nowrap; flex-shrink:0;}
+  .sidebar-footer{display:none;}
+  #main{margin-left:0; margin-top:64px;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  #content{padding:16px;}
+  .form-grid{grid-template-columns:1fr;}
+  #drawer{width:100%; max-width:100%;}
+}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div id="login-screen">
+  <div class="glass login-card">
+    <div class="login-logo" id="login-logo-slot"></div>
+    <div class="login-title" id="login-church-name">Christ Church International</div>
+    <div class="login-sub">CCI CAFM &middot; Facilities Management</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="field">
+      <label>Name</label>
+      <select id="login-name"></select>
+    </div>
+    <div class="field">
+      <label>PIN</label>
+      <input type="password" id="login-pin" maxlength="8" inputmode="numeric" placeholder="&bull;&bull;&bull;&bull;">
+    </div>
+    <button class="btn btn-primary btn-block" id="login-btn">Sign in</button>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <aside id="sidebar" class="glass">
+    <div class="brand">
+      <div class="brand-logo" id="sidebar-logo-slot"></div>
+      <div class="brand-text">
+        <div class="brand-name" id="sidebar-church-name">CCI CAFM</div>
+        <div class="brand-strap" id="sidebar-strapline">Facilities Management</div>
+      </div>
+    </div>
+    <nav class="nav-scroll" id="nav-scroll"></nav>
+    <div class="sidebar-footer">
+      <div class="user-widget">
+        <div class="avatar" id="user-widget-avatar"></div>
+        <div>
+          <div class="user-widget-name" id="user-widget-name"></div>
+          <div class="user-widget-role" id="user-widget-role"></div>
+        </div>
+        <button class="signout-btn" id="signout-btn" title="Sign out"></button>
+      </div>
+    </div>
+  </aside>
+
+  <div id="main">
+    <div id="topbar" class="glass" style="border-radius:0;">
+      <div>
+        <h1 id="topbar-title">Dashboard</h1>
+        <div class="top-sub" id="topbar-sub"></div>
+      </div>
+      <div class="topbar-spacer"></div>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<div id="overlay"></div>
+<div id="drawer" class="glass">
+  <div class="drawer-head">
+    <div class="drawer-head-row">
+      <div class="drawer-title" id="drawer-title">Title</div>
+      <button class="drawer-close" id="drawer-close-btn"></button>
+    </div>
+    <div class="drawer-sub" id="drawer-sub"></div>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-foot" id="drawer-foot"></div>
+</div>
+
+<div id="modal-overlay" hidden></div>
+<div id="toast-stack"></div>
+
+<script>
+'use strict';
+function ico(inner){return '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';}
+const ICONS = {
+  dashboard: ico('<rect x="4" y="4" width="8" height="8" rx="2"/><rect x="16" y="4" width="8" height="5" rx="2"/><rect x="16" y="13" width="8" height="11" rx="2"/><rect x="4" y="16" width="8" height="8" rx="2"/>'),
+  calendar: ico('<rect x="4" y="6" width="20" height="17" rx="3"/><line x1="4" y1="11" x2="24" y2="11"/><line x1="9" y1="3" x2="9" y2="8"/><line x1="19" y1="3" x2="19" y2="8"/><circle cx="9.5" cy="16" r="1.1" fill="currentColor" stroke="none"/><circle cx="14" cy="16" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.5" cy="16" r="1.1" fill="currentColor" stroke="none"/>'),
+  assets: ico('<path d="M14 4 3.5 9.5 14 15 24.5 9.5z"/><path d="M3.5 14.5 14 20l10.5-5.5"/><path d="M3.5 19.5 14 25l10.5-5.5"/>'),
+  maintenance: ico('<path d="M18.5 6.5a5 5 0 0 0-6.9 5.8L4 20l3.5 3.5 7.7-7.6a5 5 0 0 0 5.8-6.9l-3.3 3.3-3-3z"/>'),
+  renewals: ico('<path d="M22 8a8.5 8.5 0 0 0-15-4.2M6 20a8.5 8.5 0 0 0 15 4.2" transform="translate(0,0)"/><path d="M6 6v-4M6 6h4"/><path d="M22 22v4M22 22h-4"/>'),
+  quotes: ico('<path d="M4 6h20v13H12l-5 4v-4H4z"/><path d="M12.5 10.2c0-1-1-1.6-2.1-1.6-1.4 0-2.3.9-2.3 2 0 2.4 4.4 1.6 4.4 4.2 0 1.2-1.1 2-2.4 2-1.2 0-2.2-.6-2.3-1.7" /><line x1="10.3" y1="7.3" x2="10.3" y2="17.3"/>'),
+  costs: ico('<line x1="4" y1="24" x2="24" y2="24"/><rect x="6" y="16" width="4" height="7"/><rect x="12.5" y="11" width="4" height="12"/><rect x="19" y="6" width="4" height="17"/><path d="M6 12l6-5 5 4 7-7" stroke="var(--primary)"/>'),
+  contractors: ico('<circle cx="14" cy="9" r="4.2"/><path d="M5 24c0-5 4-8.5 9-8.5s9 3.5 9 8.5"/>'),
+  appearance: ico('<path d="M14 4a10 10 0 1 0 0 20c1.6 0 2.6-1.3 2.1-2.8-.3-.9.3-1.9 1.3-1.9H19a5 5 0 0 0 5-5c0-5.7-4.5-10.3-10-10.3z"/><circle cx="9.5" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="14" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="11" cy="17" r="1.3" fill="currentColor" stroke="none"/>'),
+  users: ico('<path d="M14 3 5 6.5v6C5 18 8.8 22.7 14 25c5.2-2.3 9-7 9-12.5v-6z"/><circle cx="14" cy="12" r="2.6"/><path d="M9.5 18c.7-2 2.4-3.2 4.5-3.2s3.8 1.2 4.5 3.2"/>'),
+  addasset: ico('<circle cx="14" cy="14" r="10"/><line x1="14" y1="9" x2="14" y2="19"/><line x1="9" y1="14" x2="19" y2="14"/>'),
+  guide: ico('<circle cx="14" cy="14" r="10"/><path d="M11 11a3 3 0 1 1 4.2 2.7c-1 .5-1.5 1-1.5 2.1"/><circle cx="13.7" cy="19.2" r="1" fill="currentColor" stroke="none"/>'),
+  signout: ico('<path d="M11 4H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h5"/><line x1="12" y1="14" x2="24" y2="14"/><path d="M19 9l5 5-5 5"/>'),
+  overdue: ico('<circle cx="14" cy="15" r="9.5"/><path d="M14 4v3"/><line x1="14" y1="9.5" x2="14" y2="15" /><line x1="14" y1="15" x2="17.5" y2="16.5"/><circle cx="14" cy="24" r="1" fill="currentColor" stroke="none"/>'),
+  duesoon: ico('<circle cx="13" cy="15" r="9.5"/><line x1="13" y1="9" x2="13" y2="15"/><line x1="13" y1="15" x2="16.5" y2="16.5"/><path d="M22 5l4 1-1 4"/>'),
+  compliant: ico('<path d="M14 3 5 6.5v6C5 18 8.8 22.7 14 25c5.2-2.3 9-7 9-12.5v-6z"/><path d="M10 14l3 3 5.5-6"/>'),
+  watch: ico('<path d="M3 14s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="14" cy="14" r="3.4"/>'),
+  nodate: ico('<rect x="4" y="6" width="20" height="17" rx="3"/><line x1="4" y1="11" x2="24" y2="11"/><line x1="9" y1="3" x2="9" y2="8"/><line x1="19" y1="3" x2="19" y2="8"/><path d="M11.7 15.3a2.3 2.3 0 1 1 3.2 2.1c-.8.4-1.2.8-1.2 1.7" /><circle cx="13.9" cy="21.6" r=".9" fill="currentColor" stroke="none"/>'),
+  expired: ico('<circle cx="14" cy="14" r="10"/><line x1="10" y1="10" x2="18" y2="18"/><line x1="18" y1="10" x2="10" y2="18"/>'),
+  warn: ico('<path d="M14 4.5 25 23.5H3z"/><line x1="14" y1="12" x2="14" y2="17.5"/><circle cx="14" cy="20.5" r="1" fill="currentColor" stroke="none"/>'),
+  poundbox: ico('<rect x="4" y="4" width="20" height="20" rx="4"/><path d="M12.3 18.5h4.4M11.2 18.5c1.6 0 2.3-.7 2.3-1.9v-2.4h1.8M11.2 14.2h4.3M12.3 9.5c1.6 0 2.8 1 2.8 2.4v2.3h-4v3.2c0 .7-.3 1.1-1 1.1"/>'),
+  fire: ico('<path d="M14 3c1 3-3 4-3 8a3 3 0 0 0 6 0c1.5 1 2.5 3 2.5 5.2A6.5 6.5 0 0 1 7 16.2C7 10 12 8 14 3z"/>'),
+  water: ico('<path d="M14 3c4 6 8 10.5 8 15a8 8 0 0 1-16 0c0-4.5 4-9 8-15z"/>'),
+  electrical: ico('<path d="M16 3 6 16h7l-2 9 12-14h-7z"/>'),
+  heating: ico('<rect x="6" y="5" width="16" height="18" rx="2"/><path d="M10 5v18M14 5v18M18 5v18" opacity=".55"/><path d="M6 25q1-2 2.5 0t2.5 0 2.5 0 2.5 0 2.5 0" transform="translate(0,-1)"/>'),
+  security: ico('<rect x="7" y="13" width="14" height="11" rx="2.5"/><path d="M10 13v-3.5a4 4 0 0 1 8 0V13"/><circle cx="14" cy="18" r="1.6" fill="currentColor" stroke="none"/>'),
+  instruments: ico('<circle cx="9" cy="21" r="3.2"/><circle cx="20" cy="18" r="3.2"/><path d="M12.2 21V6.5L23.2 4v14" /><path d="M12.2 10.5 23.2 8"/>'),
+  grounds: ico('<path d="M14 25v-9"/><path d="M14 16c-4.5 0-7-3-7-6.5C7 6 9.5 3 14 3s7 3 7 6.5c0 3.5-2.5 6.5-7 6.5z"/>'),
+  itnet: ico('<circle cx="14" cy="6" r="2.6"/><circle cx="6" cy="20" r="2.6"/><circle cx="22" cy="20" r="2.6"/><path d="M14 8.6v5M14 13.6 8 17.8M14 13.6l6 4.2"/>'),
+  qr: ico('<g opacity=".65"><rect x="4" y="4" width="8" height="8" rx="1.2"/><rect x="16" y="4" width="8" height="8" rx="1.2"/><rect x="4" y="16" width="8" height="8" rx="1.2"/><rect x="17" y="17" width="3" height="3"/><rect x="21" y="17" width="3" height="3"/><rect x="17" y="21" width="3" height="3"/><rect x="21" y="21" width="3" height="3"/></g>'),
+  plus: ico('<line x1="14" y1="7" x2="14" y2="21"/><line x1="7" y1="14" x2="21" y2="14"/>'),
+  close: ico('<line x1="8" y1="8" x2="20" y2="20"/><line x1="20" y1="8" x2="8" y2="20"/>'),
+  search: ico('<circle cx="12" cy="12" r="7.5"/><line x1="17.5" y1="17.5" x2="24" y2="24"/>'),
+  chevdown: ico('<polyline points="7,11 14,18 21,11"/>'),
+  chevleft: ico('<polyline points="17,6 10,14 17,22"/>'),
+  chevright: ico('<polyline points="11,6 18,14 11,22"/>'),
+  trash: ico('<path d="M6 8h16M11 8V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 17 5.5V8M8 8l1 15a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8l1-15"/>'),
+  edit: ico('<path d="M6 22l1-5L18.5 5.5a2.1 2.1 0 0 1 3 3L10 20l-5 1z"/><line x1="16" y1="8" x2="20" y2="12"/>'),
+  upload: ico('<path d="M14 18V6M9 11l5-5 5 5"/><path d="M5 20v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/>'),
+  download: ico('<path d="M14 4v14M9 13l5 5 5-5"/><path d="M5 20v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/>'),
+  print: ico('<path d="M8 9V4h12v5"/><rect x="5" y="9" width="18" height="9" rx="2"/><rect x="8" y="15" width="12" height="9"/>'),
+  reset: ico('<path d="M23 14A9 9 0 1 1 14 5"/><path d="M23 5v6h-6"/>'),
+  tickall: ico('<path d="M4 14l5 5L15 8"/><path d="M17 14l4 4 6-9" opacity=".6"/>'),
+};
+
+const TODAY = new Date();
+function addDays(d,n){const x=new Date(d); x.setDate(x.getDate()+n); return x;}
+function addMonths(d,n){const x=new Date(d); x.setMonth(x.getMonth()+n); return x;}
+function iso(d){return d.toISOString().slice(0,10);}
+function dAgo(n){return n==null?'':iso(addDays(TODAY,-Math.round(n)));}
+function dIn(n){return n==null?'':iso(addDays(TODAY,Math.round(n)));}
+
+const CAT_CODE = {'Heating and hot water':'HTG','Electrical installation':'ELE','Fire safety':'FIR','Water systems':'WAT','Kitchen equipment':'KIT','Audio visual and sound':'AV','IT and networking':'ITN','Security':'SEC','Building fabric':'BLD','Grounds':'GRD','Instruments':'INS'};
+const CATEGORY_LIST = Object.keys(CAT_CODE);
+const CONTRACTORS_SEED = [
+  ['Church Gas Services Ltd','Gas & Heating','Dave Morrison','01234 998877','dave@churchgasservices.co.uk','12 Furnace Rd, Midtown','Gas Safe Registered',420,'£65/hr callout, contract rates apply','Primary heating engineer.'],
+  ['Voltage Electrical Contractors','Electrical','Priya Anand','01234 445566','priya@voltageelectrical.co.uk','8 Amp Way, Midtown','NICEIC Approved',260,'£58/hr','EICR and PAT specialists.'],
+  ['SafeGuard Fire Protection','Fire Safety','Marcus Webb','01234 556677','marcus@safeguardfire.co.uk','45 Beacon St, Midtown','BAFE SP203',300,'£70/hr, extinguisher service from £12/unit','Fire alarm, extinguishers, fire doors.'],
+  ['AquaCare Water Treatment','Water Hygiene','Sandra Kim','01234 778899','sandra@aquacaretreatment.co.uk','3 Spring Close, Midtown','Legionella Control Association',180,'£220 per RA, £45 per site visit','Legionella RA and monitoring.'],
+  ['Premier Kitchen Services','Catering Equipment','Tony Ricci','01234 990011','tony@premierkitchenservices.co.uk','19 Scullery Lane, Midtown','CORGI Catering',150,'£60/hr','Commercial kitchen equipment and TR19.'],
+  ['SoundWorks AV Solutions','Audio Visual','Ella Marsh','01234 112244','ella@soundworksav.co.uk','27 Studio Rd, Midtown','-',90,'£55/hr','PA, projection and streaming support.'],
+  ['NetSecure IT Support','IT & Networking','Jamie Ochieng','01234 334455','jamie@netsecureit.co.uk','5 Router Ct, Midtown','Cyber Essentials Plus',60,'£50/hr, £180/mo support plan','Managed IT and backups.'],
+  ['Guardian Security Systems','Security','Liam Foster','01234 556600','liam@guardiansecurity.co.uk','61 Watch St, Midtown','NSI Gold',200,'£48/hr','Intruder alarm, CCTV, access control.'],
+  ['Heritage Roofing & Building','Building Fabric','Olivia Brent','01234 778800','olivia@heritageroofing.co.uk','14 Slate Yard, Midtown','CHAS Accredited',450,'£450/day two-man team','Roofing, quinquennial works, lightning protection.'],
+  ['GreenScape Grounds Maintenance','Grounds','Ryan Cole','01234 990022','ryan@greenscapegrounds.co.uk','2 Meadow Rd, Midtown','-',120,'£38/hr','Grounds, trees, mowing equipment.'],
+  ['Cathedral Organ & Instrument Care','Instruments','Margaret Ellwood','01234 112255','margaret@cathedralorgancare.co.uk','9 Pipeworks Lane, Midtown','Institute of Organ Builders',80,'£95 per tuning visit','Organ and piano maintenance.'],
+  ['Apex General Contractors','General Building','Frank Dunmore','01234 334477','frank@apexgeneralcontractors.co.uk','33 Hardstanding Rd, Midtown','CHAS Accredited',260,'£420/day','General building and groundworks.']
+];
+
+const ASSET_ROWS = [
+['Heating and hot water','Gas boiler (primary)','Gas condensing boiler','Worcester Bosch','Greenstar 8000 Life','WB88422910','Plant Room','',1,4,8500,15,9800,-1,4,'High','Facilities Manager','Church Gas Services Ltd','Yes',40,'Serviced annually under gas safety contract.'],
+['Heating and hot water','Gas boiler (backup)','Gas condensing boiler - standby unit','Worcester Bosch','Greenstar 8000 Life','WB88422911','Plant Room','',1,4,8500,15,9800,11/12,4,'High','Facilities Manager','Church Gas Services Ltd','Yes',40,'Rotated with primary unit.'],
+['Heating and hot water','Hot water cylinder','Indirect hot water cylinder','Gledhill','Stainless Lite','GL55210','Plant Room','',1,6,1800,20,2200,-4,3,'Medium','Facilities Manager','Church Gas Services Ltd','No',90,''],
+['Heating and hot water','Radiators','Radiator system - Sanctuary','Stelrad','Compact','','Main Sanctuary','',18,10,4200,25,5200,'',3,'Medium','Facilities Manager','Church Gas Services Ltd','No',180,'18 radiators across sanctuary.'],
+['Heating and hot water','Underfloor heating','Underfloor heating manifold','Uponor','Vario','UP2201','Fellowship Hall','',1,3,3100,20,3600,1,4,'Low','Facilities Manager','Church Gas Services Ltd','No',60,''],
+['Heating and hot water','Immersion heater','Electric immersion heater','Heatrae Sadia','Multipoint','HS9021','Kitchen','',1,5,420,10,500,'',3,'Low','Facilities Manager','Church Gas Services Ltd','No',120,''],
+['Electrical installation','Distribution board','Main distribution board','Schneider','Acti9','SC77201','Plant Room','',1,7,3200,25,3900,'',4,'High','Facilities Manager','Voltage Electrical Contractors','Yes',300,'Subject to 5-yearly EICR.'],
+['Electrical installation','Distribution board','Sub-distribution board - Fellowship Hall','Schneider','Acti9','SC77202','Fellowship Hall','',1,7,1400,25,1700,'',4,'High','Facilities Manager','Voltage Electrical Contractors','Yes',300,''],
+['Electrical installation','Emergency lighting','Emergency lighting system','Zenith','EL-Central','ZE4402','Whole Building','',22,2,5200,10,5800,3,4,'High','Facilities Manager','Voltage Electrical Contractors','Yes',20,'22 emergency luminaires and central battery.'],
+['Electrical installation','Standby power','Standby generator','SDMO','R22C','SD9931','Plant Room','',1,3,9800,15,11500,2,4,'Medium','Facilities Manager','Voltage Electrical Contractors','No',100,''],
+['Electrical installation','Portable appliances','Portable appliance pool - office','Various','Various','','Office','',14,'',1200,5,1200,'',3,'Low','Facilities Manager','Voltage Electrical Contractors','Yes',200,'Subject to annual PAT.'],
+['Fire safety','Fire alarm','Fire alarm panel','Advanced','MxPro5','AD5512','Entrance Lobby','',1,4,4400,15,5200,1,4,'High','Facilities Manager','SafeGuard Fire Protection','Yes',5,''],
+['Fire safety','Fire alarm','Smoke and heat detectors','Advanced','MxPro5','','Whole Building','',48,4,3600,15,4200,'',4,'High','Facilities Manager','SafeGuard Fire Protection','Yes',5,'48 detector heads.'],
+['Fire safety','Fire extinguishers','Fire extinguishers - CO2','Firechief','XTR','','Whole Building','',8,2,640,5,720,'',4,'High','Facilities Manager','SafeGuard Fire Protection','Yes',150,''],
+['Fire safety','Fire extinguishers','Fire extinguishers - Water','Firechief','XTR','','Whole Building','',10,2,500,5,560,'',4,'High','Facilities Manager','SafeGuard Fire Protection','Yes',150,''],
+['Fire safety','Fire extinguishers','Fire extinguishers - Foam','Firechief','XTR','','Kitchen','',2,2,140,5,160,'',4,'High','Facilities Manager','SafeGuard Fire Protection','Yes',150,''],
+['Fire safety','Fire doors','Fire-rated doors','Various','FD30/FD60','','Whole Building','',16,8,9600,20,11000,'',3,'High','Facilities Manager','Heritage Roofing & Building','Yes',365,'16 fire-rated doors.'],
+['Fire safety','Signage','Emergency evacuation signage','Jalite','Photoluminescent','','Whole Building','',30,5,900,10,1000,'',4,'Medium','Facilities Manager','SafeGuard Fire Protection','No',365,''],
+['Water systems','Storage tanks','Cold water storage tanks','Kingspan','Titan','KP2201','Plant Room','Roof void',2,9,2800,25,3400,'',3,'High','Facilities Manager','AquaCare Water Treatment','Yes',10,'Subject to legionella monitoring.'],
+['Water systems','Calorifier','Calorifier','Andrews','MaxFlow','AN4402','Plant Room','',1,6,3900,20,4600,'',3,'High','Facilities Manager','AquaCare Water Treatment','Yes',25,''],
+['Water systems','Water softener','Water softener','Harvey','H60','HV3301','Kitchen','',1,4,1100,10,1300,1,4,'Low','Facilities Manager','AquaCare Water Treatment','No',90,''],
+['Water systems','Sanitaryware','Toilet and washroom fittings','Various','Various','','Whole Building','',1,10,3200,20,3800,'',3,'Low','Facilities Manager','Apex General Contractors','No',365,''],
+['Kitchen equipment','Oven','Commercial oven','Falcon','Dominator Plus','FC5521','Kitchen','',1,3,4200,12,4800,2,4,'Medium','Kitchen Lead','Premier Kitchen Services','No',120,''],
+['Kitchen equipment','Dishwasher','Commercial dishwasher','Hobart','Ecomax','HB6612','Kitchen','',1,2,3800,10,4300,1,4,'Medium','Kitchen Lead','Premier Kitchen Services','No',60,''],
+['Kitchen equipment','Refrigeration','Fridge / freezer units','Foster','Xtra','FS2201','Kitchen','',3,4,2600,10,3000,'',3,'Medium','Kitchen Lead','Premier Kitchen Services','No',100,''],
+['Kitchen equipment','Extraction','Extraction canopy and ductwork','Halton','CapFlow','HT3302','Kitchen','',1,7,5200,15,6100,'',3,'High','Kitchen Lead','Premier Kitchen Services','Yes',200,'Subject to TR19 grease extract cleaning.'],
+['Kitchen equipment','Water boiler','Urn / hot water boiler','Burco','Autofil','BC4401','Kitchen','',2,5,900,10,1050,'',4,'Low','Kitchen Lead','Premier Kitchen Services','No',150,''],
+['Kitchen equipment','Hob','Catering hob','Falcon','Dominator Plus','FC5522','Kitchen','',1,3,2100,12,2400,2,4,'Low','Kitchen Lead','Premier Kitchen Services','No',120,''],
+['Audio visual and sound','PA system','Main PA system','Yamaha','CL5','YM7701','Main Sanctuary','',1,3,12000,10,13500,1,4,'Medium','AV Lead','SoundWorks AV Solutions','No',45,''],
+['Audio visual and sound','Microphones','Wireless microphone system','Shure','ULXD','SH2201','Main Sanctuary','',8,2,4800,8,5400,2,4,'Medium','AV Lead','SoundWorks AV Solutions','No',30,''],
+['Audio visual and sound','Projection','Projectors','Epson','Pro L','EP3301','Main Sanctuary','',2,3,5200,8,5800,1,3,'Medium','AV Lead','SoundWorks AV Solutions','No',45,''],
+['Audio visual and sound','Streaming','Video switcher / streaming rig','Blackmagic','ATEM','BM5501','Main Sanctuary','AV booth',1,2,3600,8,4000,1,4,'Low','AV Lead','SoundWorks AV Solutions','No',30,''],
+['Audio visual and sound','Lighting','Stage lighting rig','Chauvet','SlimPAR','CH2201','Main Sanctuary','',12,4,3200,10,3600,'',3,'Low','AV Lead','SoundWorks AV Solutions','No',60,''],
+['IT and networking','Server','Server / NAS','Synology','RS1221','SY4401','Office','Server cupboard',1,2,2200,6,2500,2,4,'Medium','IT Lead','NetSecure IT Support','No',30,''],
+['IT and networking','Network','Network switches and WiFi access points','Ubiquiti','UniFi','UB3302','Whole Building','',6,2,1800,6,2000,1,4,'Medium','IT Lead','NetSecure IT Support','No',30,''],
+['IT and networking','CCTV storage','CCTV network video recorder','Hikvision','DS-7716','HK2201','Office','Server cupboard',1,3,1400,8,1600,1,4,'Medium','IT Lead','Guardian Security Systems','No',30,''],
+['IT and networking','Office IT','Office PCs and printer','Dell / HP','Various','','Office','',5,3,3500,5,3500,'',3,'Low','IT Lead','NetSecure IT Support','No',90,''],
+['Security','Intruder alarm','Intruder alarm system','Texecom','Premier Elite','TX4401','Whole Building','',1,5,2600,10,3000,'',4,'High','Facilities Manager','Guardian Security Systems','No',60,''],
+['Security','CCTV','CCTV cameras','Hikvision','Turbo HD','HK2202','Whole Building','',10,3,3200,8,3600,1,4,'High','Facilities Manager','Guardian Security Systems','No',30,''],
+['Security','Access control','Access control / door entry','Paxton','Net2','PX3301','Main Entrance','',1,4,2100,10,2400,'',4,'Medium','Facilities Manager','Guardian Security Systems','No',45,''],
+['Security','Safe','Safe for cash and valuables','Chubb','SecureLine','CH5502','Office','',1,8,1100,20,1300,'',3,'Low','Facilities Manager','Guardian Security Systems','No',365,''],
+['Building fabric','Roof','Main roof covering','','Slate / lead','','Whole Building','Roof',1,'','','','','',3,'High','Facilities Manager','Heritage Roofing & Building','Yes',365,'Quinquennial inspection due.'],
+['Building fabric','Rainwater goods','Gutters and downpipes','','','','Whole Building','',1,'','','','','',3,'Medium','Facilities Manager','Heritage Roofing & Building','No',180,''],
+['Building fabric','Windows','External windows','','','','Whole Building','',1,'','','','','',3,'Low','Facilities Manager','Heritage Roofing & Building','No',365,''],
+['Building fabric','Boundary','Boundary walls and fencing','','','','Grounds','',1,'','','','','',3,'Low','Facilities Manager','Apex General Contractors','No',365,''],
+['Building fabric','Lightning protection','Lightning protection system','','BS EN 62305','','Whole Building','Roof',1,6,1800,10,2100,'',4,'High','Facilities Manager','Heritage Roofing & Building','Yes',300,''],
+['Grounds','Trees','Managed trees','','','','Grounds','',14,'','','','','',3,'High','Facilities Manager','GreenScape Grounds Maintenance','Yes',200,'Subject to periodic tree inspection.'],
+['Grounds','Car park','Car park and tarmac','','','','Car Park','',1,'','','','','',3,'Medium','Facilities Manager','Apex General Contractors','No',365,''],
+['Grounds','Machinery','Ride-on mower','Husqvarna','Rider','HQ2201','Grounds','Store Room',1,4,3800,8,4200,1,4,'Low','Facilities Manager','GreenScape Grounds Maintenance','No',60,''],
+['Instruments','Organ','Pipe organ','Harrison and Harrison','','','Main Sanctuary','',1,'','','','','',4,'High','Music Director','Cathedral Organ and Instrument Care','No',180,'Tuned quarterly.'],
+['Instruments','Piano','Grand piano','Yamaha','C3','YM9901','Main Sanctuary','',1,8,18000,40,20000,'',4,'Medium','Music Director','Cathedral Organ and Instrument Care','No',180,'']
+];
+
+function buildAssets(){
+  const counters={};
+  return ASSET_ROWS.map(r=>{
+    const [category,subCategory,description,make,model,serial,location,subLocation,quantity,instYears,cost,life,repl,warrYears,condition,criticality,responsible,contractor,statutory,lastVerDays,notes]=r;
+    const code=CAT_CODE[category];
+    counters[code]=(counters[code]||0)+1;
+    return {
+      id: code+'-'+String(counters[code]).padStart(3,'0'),
+      category, subCategory, description, make, model, serial, location, subLocation,
+      quantity: quantity===''? '': quantity,
+      installDate: instYears===''?'':dAgo(instYears*365),
+      purchaseCost: cost===''?'':cost,
+      lifeYears: life===''?'':life,
+      replacementCost: repl===''?'':repl,
+      warrantyExpiry: warrYears===''?'':dIn(warrYears*365),
+      condition, criticality, responsible, contractor, statutory,
+      lastVerified: dAgo(lastVerDays),
+      notes
+    };
+  });
+}
+
+const MAINT_ROWS = [
+['Gas safety check (CP12)','HTG-001','Statutory','Annual',12,'Church Gas Services Ltd',180,'CP12-2291','Gas Safety (Installation and Use) Regulations 1998','Confirmed','Annual landlord gas safety record.'],
+['Boiler service - primary','HTG-001','Servicing','Annual',60,'Church Gas Services Ltd',220,'','','Confirmed',''],
+['Boiler service - backup','HTG-002','Servicing','Annual',340,'Church Gas Services Ltd',220,'','','Confirmed',''],
+['EICR fixed wire testing','ELE-001','Statutory','Quinquennial',1780,'Voltage Electrical Contractors',680,'EICR-4471','Electricity at Work Regulations 1989','Confirmed','5-yearly fixed wire test.'],
+['PAT testing','ELE-005','Statutory','Annual',200,'Voltage Electrical Contractors',180,'PAT-9012','Electricity at Work Regulations 1989','Confirmed',''],
+['Emergency lighting monthly function test','ELE-003','Statutory','Monthly',25,'Facilities Manager (in-house)',0,'','BS 5266-1','Confirmed','Brief functional test.'],
+['Emergency lighting annual duration test','ELE-003','Statutory','Annual',300,'Voltage Electrical Contractors',260,'EL-ANN-118','BS 5266-1','Confirmed','Full 3-hour duration test.'],
+['Fire alarm weekly test','FIR-001','Statutory','Weekly',10,'Facilities Manager (in-house)',0,'','BS 5839-1','Confirmed','Different call point tested each week.'],
+['Fire alarm six-monthly service','FIR-001','Statutory','Six-monthly',170,'SafeGuard Fire Protection',280,'FA-6M-552','BS 5839-1','Confirmed',''],
+['Fire extinguisher annual service','FIR-003','Statutory','Annual',330,'SafeGuard Fire Protection',150,'FE-ANN-201','BS 5306-3','Confirmed',''],
+['Fire extinguisher extended service (5-yearly)','FIR-003','Statutory','Quinquennial',1500,'SafeGuard Fire Protection',420,'FE-EXT-045','BS 5306-3','Confirmed','Overhaul / discharge test.'],
+['Fire risk assessment review','FIR-001','Statutory','Annual',345,'SafeGuard Fire Protection',380,'FRA-2025-1','Regulatory Reform (Fire Safety) Order 2005','Confirmed',''],
+['Fire door inspection','FIR-006','Statutory','Six-monthly',165,'SafeGuard Fire Protection',0,'','BS 8214 / RRFSO 2005','Confirmed',''],
+['Legionella risk assessment','WAT-001','Statutory','Biennial',700,'AquaCare Water Treatment',480,'LRA-2024-3','ACOP L8 / HSG274','Confirmed',''],
+['Legionella monthly temperature checks','WAT-001','Statutory','Monthly',20,'Facilities Manager (in-house)',0,'','ACOP L8','Confirmed','Sentinel outlet temperatures logged monthly.'],
+['Calorifier inspection','WAT-002','Servicing','Annual',290,'AquaCare Water Treatment',210,'','','Confirmed',''],
+['Water tank clean and disinfect','WAT-001','Servicing','Annual',310,'AquaCare Water Treatment',260,'','','Confirmed',''],
+['Asbestos management plan review','BLD-001','Statutory','Annual',350,'Heritage Roofing & Building',150,'ASB-MP-6','Control of Asbestos Regulations 2012','To confirm','Presumed asbestos survey held on file - reverify scope.'],
+['Tree inspection','GRD-001','Statutory','Annual',355,'GreenScape Grounds Maintenance',280,'TREE-2025','Occupiers\' Liability Act 1957','Confirmed',''],
+['Lightning protection system test','BLD-005','Statutory','Annual',360,'Heritage Roofing & Building',260,'LPS-TST-9','BS EN 62305','To confirm','Confirm system still required for current roofline.'],
+['Quinquennial building inspection','BLD-001','Statutory','Quinquennial',1650,'Heritage Roofing & Building',3200,'QI-2021','Quinquennial inspection scheme','Confirmed',''],
+['Kitchen extraction deep clean (TR19)','KIT-004','Statutory','Six-monthly',175,'Premier Kitchen Services',420,'TR19-118','TR19 / RRFSO 2005','Confirmed',''],
+['Catering equipment gas safety check','KIT-001','Statutory','Annual',300,'Church Gas Services Ltd',160,'CP12-K-04','Gas Safety (Installation and Use) Regulations 1998','Confirmed',''],
+['Generator load test','ELE-004','Servicing','Monthly',18,'Voltage Electrical Contractors',0,'','','Confirmed',''],
+['CCTV system check','SEC-002','Routine','Quarterly',75,'Guardian Security Systems',90,'','','Confirmed',''],
+['Intruder alarm test','SEC-001','Routine','Quarterly',55,'Guardian Security Systems',90,'','','Confirmed',''],
+['Access control system check','SEC-003','Routine','Six-monthly',150,'Guardian Security Systems',110,'','','Confirmed',''],
+['AV system check','AV-001','Routine','Quarterly',40,'SoundWorks AV Solutions',80,'','','Confirmed',''],
+['IT backup and server check','ITN-001','Routine','Monthly',15,'NetSecure IT Support',0,'','','Confirmed',''],
+['Organ tuning and maintenance','INS-001','Servicing','Quarterly',65,'Cathedral Organ and Instrument Care',95,'','','Confirmed',''],
+['Gutter clearing','BLD-002','Routine','Six-monthly',160,'Heritage Roofing & Building',180,'','','Confirmed',''],
+['Ride-on mower service','GRD-003','Servicing','Annual',280,'GreenScape Grounds Maintenance',140,'','','Confirmed','']
+];
+
+function buildMaintenance(){
+  let n=0;
+  return MAINT_ROWS.map(r=>{
+    n++;
+    const [task,assetId,type,frequency,lastDays,contractor,lastCost,certRef,basis,applies,notes]=r;
+    return {id:'MT-'+String(n).padStart(3,'0'), assetId, task, type, frequency, lastCompleted:dAgo(lastDays), contractor, lastCost:lastCost||'', certRef, basis, applies, notes};
+  });
+}
+
+const RENEWAL_ROWS = [
+['Buildings Insurance','Ecclesiastical Insurance Group','0345 777 3322','POL-BLD-2291',-345,20,4200,'No',30,''],
+['Public Liability Insurance','Ecclesiastical Insurance Group','0345 777 3322','POL-PL-2291',-345,20,1800,'No',30,''],
+['Contents Insurance','Ecclesiastical Insurance Group','0345 777 3322','POL-CNT-2291',-345,75,900,'No',30,''],
+['Fire Alarm Maintenance Contract','SafeGuard Fire Protection','01234 556677','FA-CTR-118',-240,120,1200,'Yes',60,''],
+['Gas Safety Contract','Church Gas Services Ltd','01234 998877','GS-CTR-203',-180,200,650,'Yes',30,''],
+['Boiler Service Contract','Church Gas Services Ltd','01234 998877','BS-CTR-204',-180,200,480,'Yes',30,''],
+['PAT Testing Contract','Voltage Electrical Contractors','01234 445566','PAT-CTR-091',-300,-10,350,'No',30,'Renewal overdue - re-quote requested.'],
+['CCTV Maintenance Contract','Guardian Security Systems','01234 667788','CCTV-CTR-077',-150,260,680,'Yes',30,''],
+['Broadband and IT Support Contract','NetSecure IT Support','01234 889900','IT-CTR-140',-90,300,2400,'Yes',60,''],
+['Grounds Maintenance Contract','GreenScape Grounds Maintenance','01234 112233','GRD-CTR-055',-120,45,3600,'No',30,''],
+['Photocopier Lease','Office Solutions Ltd','01234 223344','LEASE-COPY-018',-720,10,1100,'No',60,''],
+['Organ Tuning Contract','Cathedral Organ and Instrument Care','01234 334455','ORG-CTR-009',-210,150,800,'Yes',30,''],
+['Window Cleaning Contract','Crystal Clear Cleaning','01234 556699','WC-CTR-033',-30,335,600,'Yes',30,'']
+];
+
+function buildRenewals(){
+  let n=0;
+  return RENEWAL_ROWS.map(r=>{
+    n++;
+    const [item,provider,contact,ref,startDays,expiryDays,annualCost,autoRenew,noticeDays,notes]=r;
+    return {id:'RN-'+String(n).padStart(3,'0'), item, provider, contact, ref, startDate:dAgo(-startDays), expiryDate:dIn(expiryDays), annualCost, autoRenew, noticeDays, notes};
+  });
+}
+
+const QUOTE_ROWS = [
+['Roof repair - lead flashing and slate replacement','Heritage Roofing & Building','BLD-001','Reactive',-50,-40,3200,640,20,'Accepted',-35,'Lowest compliant quote with 10-year guarantee.','PCC-MIN-114','Yes',-10,-5,'10 years',3200],
+['Boiler replacement - primary unit','Church Gas Services Ltd','HTG-001','Planned',-30,-20,8500,1700,40,'Under review','','','','No','','','',''],
+['Fire door replacement x4','SafeGuard Fire Protection','FIR-006','Statutory',-80,-70,2400,480,-10,'Expired','','Quote lapsed before decision was made.','','No','','','',''],
+['Car park resurfacing','Apex General Contractors','GRD-002','Improvement',-15,-5,6200,1240,55,'Received','','','','No','','','',''],
+['Kitchen extraction deep clean','Premier Kitchen Services','KIT-004','Statutory',-10,'','','','','Chased','','','','No','','','',''],
+['Gutter repair','Heritage Roofing & Building','BLD-002','Reactive',-5,'','','','','Requested','','','','No','','','','']
+];
+
+function buildQuotes(){
+  let n=0;
+  return QUOTE_ROWS.map(r=>{
+    n++;
+    const [description,contractor,assetId,category,reqD,recD,exVat,vat,validD,status,decD,rationale,approvalRef,invoiced,invD,payD,warranty,invAmt]=r;
+    return {
+      id:'Q-'+String(n).padStart(3,'0'),
+      ref:'Q-2026-'+String(n).padStart(3,'0'),
+      dateRequested:dAgo(-reqD), dateReceived:recD===''?'':dAgo(-recD), contractor, assetId, description, category,
+      exVat:exVat===''?'':exVat, vat:vat===''?'':vat, validUntil:validD===''?'':dIn(validD), status,
+      decisionDate:decD===''?'':dAgo(-decD), rationale, approvalRef, invoiced,
+      invoiceDate:invD===''?'':dAgo(-invD), paymentDate:payD===''?'':dAgo(-payD), warranty,
+      invoiceAmount:invAmt===''?'':invAmt, notes:''
+    };
+  });
+}
+
+function buildContractors(){
+  let n=0;
+  return CONTRACTORS_SEED.map(r=>{
+    n++;
+    const [company,trade,contactName,phone,email,address,accreditations,insDays,rates,notes]=r;
+    return {id:'C-'+String(n).padStart(3,'0'), company, trade, contactName, phone, email, address, accreditations, insuranceExpiry:dIn(insDays), rates, notes};
+  });
+}
+
+function seedDB(){
+  const assets = buildAssets();
+  return {
+    assets,
+    maintenance: buildMaintenance(),
+    renewals: buildRenewals(),
+    quotes: buildQuotes(),
+    contractors: buildContractors(),
+    settings: {fyStart:4, soon:30, watch:90, lead:30},
+    appearance: {
+      preset:'cci', accent:'#c0142a', header:'#611426', statusSet:'standard',
+      fontSet:'system', textSize:'medium', rowSpacing:'comfortable', radius:'rounded',
+      churchName:'Christ Church International', strapline:'Facilities Management', logo:''
+    },
+    meta:{ sampleDataLoaded:true, sampleAssetIds: assets.map(a=>a.id), createdAt: iso(TODAY) }
+  };
+}
+
+const LS_DB='cci_cafm_db', LS_AUTH='cci_cafm_auth', LS_SESSION='cci_cafm_session';
+
+function loadDB(){ try{const raw=localStorage.getItem(LS_DB); if(raw) return JSON.parse(raw);}catch(e){} const db=seedDB(); localStorage.setItem(LS_DB, JSON.stringify(db)); return db; }
+function saveDB(){ localStorage.setItem(LS_DB, JSON.stringify(DB)); }
+function defaultAuth(){ return {users:[{id:'u_admin',name:'Administrator',initials:'AD',pin:'1234',role:'admin',mustChangePin:true,permissions:{}}]}; }
+function loadAuth(){ try{const raw=localStorage.getItem(LS_AUTH); if(raw) return JSON.parse(raw);}catch(e){} const a=defaultAuth(); localStorage.setItem(LS_AUTH, JSON.stringify(a)); return a; }
+function saveAuth(){ localStorage.setItem(LS_AUTH, JSON.stringify(AUTH)); }
+
+let DB = loadDB();
+let AUTH = loadAuth();
+let SESSION = null;
+let ACTIVE_TAB = 'dashboard';
+let UI = { assets:{search:'',filter:'all',sel:new Set()}, maintenance:{search:'',filter:'all',sel:new Set()},
+  renewals:{search:'',filter:'all',sel:new Set()}, quotes:{search:'',filter:'all',sel:new Set()}, contractors:{search:'',filter:'all',sel:new Set()},
+  calendar:{view:'month', date:new Date(), selectedDay:null}, addasset:{mode:'single', addedNow:[], pasteRows:[]} };
+const RENDERERS = {};
+const ACTIONS = {};
+
+const PERMISSION_KEYS = [
+  {key:'view_dashboard', label:'View Dashboard'},
+  {key:'view_calendar', label:'View Calendar'},
+  {key:'add_assets', label:'Add Asset'},
+  {key:'view_assets', label:'View Asset Register'},
+  {key:'edit_assets', label:'Edit Asset Register'},
+  {key:'view_maintenance', label:'View Maintenance Schedule'},
+  {key:'edit_maintenance', label:'Edit Maintenance Schedule'},
+  {key:'view_renewals', label:'View Renewals'},
+  {key:'edit_renewals', label:'Edit Renewals'},
+  {key:'view_quotes', label:'View Quote Tracker'},
+  {key:'edit_quotes', label:'Edit Quote Tracker'},
+  {key:'view_costs', label:'View Cost Analysis'},
+  {key:'view_contractors', label:'View Contractors'},
+  {key:'edit_contractors', label:'Edit Contractors'}
+];
+
+const TAB_DEFS = {
+  dashboard:{label:'Dashboard', icon:'dashboard', group:'Overview', view:'view_dashboard'},
+  calendar:{label:'Calendar', icon:'calendar', group:'Overview', view:'view_calendar'},
+  addasset:{label:'Add Asset', icon:'addasset', group:'Overview', view:'add_assets'},
+  assets:{label:'Asset Register', icon:'assets', group:'Records', view:'view_assets', edit:'edit_assets'},
+  maintenance:{label:'Maintenance Schedule', icon:'maintenance', group:'Records', view:'view_maintenance', edit:'edit_maintenance'},
+  renewals:{label:'Renewals', icon:'renewals', group:'Records', view:'view_renewals', edit:'edit_renewals'},
+  quotes:{label:'Quote Tracker', icon:'quotes', group:'Records', view:'view_quotes', edit:'edit_quotes'},
+  costs:{label:'Cost Analysis', icon:'costs', group:'Records', view:'view_costs'},
+  contractors:{label:'Contractors', icon:'contractors', group:'Records', view:'view_contractors', edit:'edit_contractors'},
+  appearance:{label:'Appearance', icon:'appearance', group:'Settings', view:null},
+  users:{label:'User Management', icon:'users', group:'Settings', view:null, adminOnly:true},
+  guide:{label:'Guide', icon:'guide', group:'Settings', view:null}
+};
+
+function hasPerm(key){ if(!SESSION) return false; if(SESSION.role==='admin') return true; return !!(SESSION.permissions && SESSION.permissions[key]); }
+function canViewTab(tab){ const def=TAB_DEFS[tab]; if(!def) return false; if(def.adminOnly) return SESSION && SESSION.role==='admin'; if(def.view===null) return !!SESSION; return hasPerm(def.view); }
+function canEditTab(tab){ const def=TAB_DEFS[tab]; if(!def) return false; if(SESSION && SESSION.role==='admin') return true; if(!def.edit) return false; return hasPerm(def.edit); }
+
+const FREQ_STEP = {Weekly:{u:'d',n:7}, Monthly:{u:'m',n:1}, Quarterly:{u:'m',n:3}, 'Six-monthly':{u:'m',n:6}, Annual:{u:'m',n:12}, Biennial:{u:'m',n:24}, Triennial:{u:'m',n:36}, Quinquennial:{u:'m',n:60}};
+function nextDueDate(task){ if(!task.lastCompleted) return ''; const f=FREQ_STEP[task.frequency]||{u:'m',n:12}; const base=new Date(task.lastCompleted+'T00:00:00'); const d=f.u==='d'?addDays(base,f.n):addMonths(base,f.n); return iso(d); }
+function daysUntil(dateStr){ if(!dateStr) return null; const d=new Date(dateStr+'T00:00:00'); const t=new Date(); t.setHours(0,0,0,0); return Math.round((d-t)/86400000); }
+function statusFromDate(dateStr){ if(!dateStr) return 'nodate'; const d=daysUntil(dateStr); const s=DB.settings; if(d<0) return 'overdue'; if(d<=s.soon) return 'duesoon'; if(d<=s.watch) return 'watch'; return 'compliant'; }
+function maintenanceStatus(task){ return statusFromDate(nextDueDate(task)); }
+function renewalStatus(r){ return statusFromDate(r.expiryDate); }
+function renewalReviewDate(r){ if(!r.expiryDate) return ''; return iso(addDays(new Date(r.expiryDate+'T00:00:00'), -((Number(r.noticeDays)||0)+(DB.settings.lead||0)))); }
+function quoteTotal(q){ return (Number(q.exVat)||0)+(Number(q.vat)||0); }
+function quoteVariance(q){ if(q.invoiceAmount===''||q.invoiceAmount==null) return null; return Number(q.invoiceAmount)-Number(q.exVat||0); }
+function quoteVariancePct(q){ const v=quoteVariance(q); if(v==null||!Number(q.exVat)) return null; return (v/Number(q.exVat))*100; }
+
+const STATUS_LABEL = {overdue:'Overdue', duesoon:'Due soon', watch:'Watch', compliant:'Compliant', nodate:'No date'};
+function statusPill(status){ return '<span class="pill pill-'+status+'"><span class="pill-dot"></span>'+STATUS_LABEL[status]+'</span>'; }
+function fmtDate(d){ if(!d) return '—'; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtMoney(n){ if(n===''||n==null||isNaN(n)) return '—'; return '£'+Number(n).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function uid(prefix){ return prefix+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function nextAssetId(category){ const code=CAT_CODE[category]; if(!code) return ''; const nums=DB.assets.filter(a=>a.id.startsWith(code+'-')).map(a=>parseInt(a.id.split('-')[1],10)).filter(n=>!isNaN(n)); const next=(nums.length?Math.max(...nums):0)+1; return code+'-'+String(next).padStart(3,'0'); }
+
+function openModal({title, body, confirmLabel, cancelLabel, onConfirm, danger}){
+  const ov=document.getElementById('modal-overlay');
+  ov.innerHTML = '<div class="glass modal">'+
+    '<h3>'+esc(title)+'</h3>'+
+    '<p>'+body+'</p>'+
+    '<div class="modal-actions">'+
+      '<button class="btn" id="modal-cancel">'+(cancelLabel||'Cancel')+'</button>'+
+      '<button class="btn '+(danger?'btn-danger':'btn-primary')+'" id="modal-confirm">'+(confirmLabel||'Confirm')+'</button>'+
+    '</div></div>';
+  ov.hidden=false;
+  document.getElementById('modal-cancel').onclick=closeModal;
+  document.getElementById('modal-confirm').onclick=()=>{ closeModal(); onConfirm && onConfirm(); };
+}
+function closeModal(){ document.getElementById('modal-overlay').hidden=true; document.getElementById('modal-overlay').innerHTML=''; }
+
+let DRAWER_ON_CLOSE=null;
+function openDrawer({title, sub, body, foot, onClose}){
+  document.getElementById('drawer-title').textContent=title||'';
+  document.getElementById('drawer-sub').textContent=sub||'';
+  document.getElementById('drawer-body').innerHTML=body||'';
+  document.getElementById('drawer-foot').innerHTML=foot||'';
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+  DRAWER_ON_CLOSE = onClose||null;
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+  if(DRAWER_ON_CLOSE) { const fn=DRAWER_ON_CLOSE; DRAWER_ON_CLOSE=null; fn(); }
+}
+document.getElementById('drawer-close-btn').innerHTML=ICONS.close;
+document.getElementById('drawer-close-btn').onclick=closeDrawer;
+document.getElementById('overlay').onclick=closeDrawer;
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ if(document.getElementById('drawer').classList.contains('open')) closeDrawer(); if(!document.getElementById('modal-overlay').hidden) closeModal(); } });
+
+function exportCSV(rows, columns, filename){
+  const header = columns.map(c=>'"'+c.label.replace(/"/g,'""')+'"').join(',');
+  const lines = rows.map(r=>columns.map(c=>{ let v=c.get(r); if(v==null) v=''; return '"'+String(v).replace(/"/g,'""')+'"'; }).join(','));
+  const csv = [header].concat(lines).join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Exported '+rows.length+' rows to CSV', 'success');
+}
+
+const APPEARANCE_PRESETS = {
+  cci: {label:'CCI Maroon', primary:'#c0142a', header:'#611426'},
+  ocean: {label:'Ocean Navy', primary:'#1d6fd6', header:'#0b2a52'},
+  forest: {label:'Forest Green', primary:'#1f9d5a', header:'#0d3d24'},
+  royal: {label:'Royal Purple', primary:'#7b3fe4', header:'#2f1660'},
+  slate: {label:'Slate Grey', primary:'#5b6b7a', header:'#22292f'},
+  sunset: {label:'Sunset Amber', primary:'#e0862a', header:'#5c2c0a'}
+};
+const FONT_SETS = {
+  system:{label:'System', css:'"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif'},
+  serif:{label:'Classic Serif', css:'Georgia,"Times New Roman",serif'},
+  rounded:{label:'Modern Rounded', css:'Verdana,"Trebuchet MS",sans-serif'},
+  compact:{label:'Compact', css:'"Segoe UI",Tahoma,Geneva,sans-serif'}
+};
+const TEXT_SIZES = {small:'13px', medium:'14px', large:'16px'};
+const ROW_SPACINGS = {compact:'4px', comfortable:'10px', spacious:'16px'};
+const RADII = {sharp:'6px', rounded:'16px', soft:'24px'};
+
+function applyAppearance(){
+  const a = DB.appearance;
+  const preset = APPEARANCE_PRESETS[a.preset] || APPEARANCE_PRESETS.cci;
+  const primary = a.accent || preset.primary;
+  const header = a.header || preset.header;
+  const root = document.documentElement.style;
+  root.setProperty('--primary', primary);
+  root.setProperty('--header', header);
+  const rgb = hexToRgb(primary);
+  root.setProperty('--primary-rgb', rgb.r+','+rgb.g+','+rgb.b);
+  root.setProperty('--font', (FONT_SETS[a.fontSet]||FONT_SETS.system).css);
+  root.setProperty('--fs', TEXT_SIZES[a.textSize]||TEXT_SIZES.medium);
+  root.setProperty('--row-gap', ROW_SPACINGS[a.rowSpacing]||ROW_SPACINGS.comfortable);
+  root.setProperty('--radius', RADII[a.radius]||RADII.rounded);
+  document.documentElement.setAttribute('data-statusset', a.statusSet||'standard');
+  document.getElementById('sidebar-church-name').textContent = a.churchName||'CCI CAFM';
+  document.getElementById('sidebar-strapline').textContent = a.strapline||'';
+  document.getElementById('login-church-name').textContent = a.churchName||'CCI CAFM';
+  const logoHtml = a.logo ? '<img src="'+a.logo+'">' : ico28('assets');
+  document.getElementById('sidebar-logo-slot').innerHTML = a.logo? '<img src="'+a.logo+'">' : churchGlyph();
+  document.getElementById('login-logo-slot').innerHTML = a.logo? '<img src="'+a.logo+'">' : churchGlyph();
+}
+function churchGlyph(){ return '<svg viewBox="0 0 28 28" width="20" height="20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v6M11 6h6"/><path d="M8 25V14L14 9l6 5v11"/><path d="M8 25h12"/></svg>'; }
+function ico28(name){ return ICONS[name]||''; }
+function hexToRgb(hex){ hex=hex.replace('#',''); if(hex.length===3) hex=hex.split('').map(c=>c+c).join(''); const num=parseInt(hex,16); return {r:(num>>16)&255, g:(num>>8)&255, b:num&255}; }
+
+function renderNav(){
+  const groups = {Overview:[], Records:[], Settings:[]};
+  Object.keys(TAB_DEFS).forEach(key=>{ if(canViewTab(key)) groups[TAB_DEFS[key].group].push(key); });
+  let html='';
+  Object.keys(groups).forEach(g=>{
+    if(!groups[g].length) return;
+    html += '<div class="nav-group"><div class="nav-group-label">'+g+'</div>';
+    groups[g].forEach(key=>{
+      const def=TAB_DEFS[key];
+      html += '<button class="nav-item'+(key===ACTIVE_TAB?' active':'')+'" data-action="navto" data-id="'+key+'">'+ICONS[def.icon]+'<span>'+def.label+'</span></button>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('nav-scroll').innerHTML = html;
+}
+function renderTopbar(){
+  const def=TAB_DEFS[ACTIVE_TAB];
+  document.getElementById('topbar-title').textContent = def ? def.label : '';
+  const subs = {
+    dashboard:'Overview of facilities status', calendar:'Schedule and due dates', addasset:'Register new assets',
+    assets:DB.assets.length+' assets on register', maintenance:DB.maintenance.length+' scheduled tasks',
+    renewals:DB.renewals.length+' contracts and policies', quotes:DB.quotes.length+' quotes tracked',
+    costs:'Live cost summaries', contractors:DB.contractors.length+' approved contractors',
+    appearance:'Customise the look of CCI CAFM', users:'Manage staff access', guide:'Help and settings'
+  };
+  document.getElementById('topbar-sub').textContent = subs[ACTIVE_TAB]||'';
+}
+function showTab(tab){
+  if(!canViewTab(tab)){ toast('You do not have access to that section', 'error'); return; }
+  ACTIVE_TAB = tab;
+  renderNav(); renderTopbar();
+  if(RENDERERS[tab]) RENDERERS[tab]();
+}
+ACTIONS.navto = (id)=>showTab(id);
+
+function renderUserWidget(){
+  document.getElementById('user-widget-avatar').textContent = SESSION.initials||'??';
+  document.getElementById('user-widget-name').textContent = SESSION.name;
+  document.getElementById('user-widget-role').textContent = SESSION.role==='admin'?'Administrator':'Staff';
+  document.getElementById('signout-btn').innerHTML = ICONS.signout;
+}
+document.getElementById('signout-btn').addEventListener('click', ()=>{
+  openModal({title:'Sign out', body:'Are you sure you want to sign out of CCI CAFM?', confirmLabel:'Sign out', onConfirm:signOut});
+});
+function signOut(){ localStorage.removeItem(LS_SESSION); SESSION=null; location.reload(); }
+
+function refreshCurrentTab(){ if(RENDERERS[ACTIVE_TAB]) RENDERERS[ACTIVE_TAB](); }
+
+document.addEventListener('click', function(e){
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const action = el.dataset.action;
+  if(ACTIONS[action]) { ACTIONS[action](el.dataset.id, el, e); }
+});
+document.addEventListener('input', function(e){
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  if(el.dataset.action==='rt-search'){
+    const tab = el.dataset.id;
+    UI[tab].search = el.value;
+    const pos = el.selectionStart;
+    RENDERERS[tab]();
+    const ni = document.querySelector('.search-input[data-id="'+tab+'"]');
+    if(ni){ ni.focus(); try{ ni.setSelectionRange(pos,pos); }catch(e2){} }
+  }
+});
+
+function populateLogin(){
+  const sel=document.getElementById('login-name');
+  sel.innerHTML = AUTH.users.map(u=>'<option value="'+u.id+'">'+esc(u.name)+'</option>').join('');
+  document.getElementById('login-error').textContent='';
+  document.getElementById('login-pin').value='';
+}
+document.getElementById('login-btn').addEventListener('click', attemptLogin);
+document.getElementById('login-pin').addEventListener('keydown', e=>{ if(e.key==='Enter') attemptLogin(); });
+function attemptLogin(){
+  const uid2=document.getElementById('login-name').value;
+  const pin=document.getElementById('login-pin').value.trim();
+  const user=AUTH.users.find(u=>u.id===uid2);
+  const errEl=document.getElementById('login-error');
+  if(!user){ errEl.textContent='Select a user.'; return; }
+  if(!pin || pin!==user.pin){ errEl.textContent='Incorrect PIN. Please try again.'; document.getElementById('login-pin').value=''; return; }
+  errEl.textContent='';
+  localStorage.setItem(LS_SESSION, user.id);
+  SESSION = user;
+  if(user.mustChangePin){ startApp(true); } else { startApp(false); }
+}
+function startApp(forcePinChange){
+  document.getElementById('login-screen').hidden=true;
+  document.getElementById('app').hidden=false;
+  applyAppearance();
+  renderUserWidget();
+  renderNav();
+  const first = Object.keys(TAB_DEFS).find(k=>canViewTab(k)) || 'guide';
+  showTab(canViewTab('dashboard')?'dashboard':first);
+  if(forcePinChange) openForcedPinChange();
+}
+function openForcedPinChange(){
+  const ov=document.getElementById('modal-overlay');
+  ov.innerHTML = '<div class="glass modal">'+
+    '<h3>Set a new PIN</h3>'+
+    '<p>For security, please set a personal PIN (4–8 digits) before continuing.</p>'+
+    '<div class="field"><label>New PIN</label><input id="force-pin-1" type="password" maxlength="8" inputmode="numeric"></div>'+
+    '<div class="field"><label>Confirm PIN</label><input id="force-pin-2" type="password" maxlength="8" inputmode="numeric"></div>'+
+    '<div id="force-pin-err" style="color:#ff9296;font-size:12px;margin-bottom:10px;"></div>'+
+    '<div class="modal-actions"><button class="btn btn-primary btn-block" id="force-pin-save">Save PIN</button></div>'+
+    '</div>';
+  ov.hidden=false;
+  document.getElementById('force-pin-save').onclick=()=>{
+    const p1=document.getElementById('force-pin-1').value.trim();
+    const p2=document.getElementById('force-pin-2').value.trim();
+    if(!/^[0-9]{4,8}$/.test(p1) || p1!==p2){ document.getElementById('force-pin-err').textContent='PIN must be 4-8 digits and match.'; return; }
+    const u=AUTH.users.find(x=>x.id===SESSION.id);
+    u.pin=p1; u.mustChangePin=false; saveAuth(); SESSION=u;
+    closeModal(); toast('PIN updated', 'success');
+  };
+}
+
+function donutSVG(segments){
+  const total = segments.reduce((s,x)=>s+x.value,0)||1;
+  const r=40, cx=50, cy=50, circ=2*Math.PI*r;
+  let offset=0, circles='';
+  segments.forEach(seg=>{
+    if(seg.value<=0) return;
+    const len=(seg.value/total)*circ;
+    circles += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+seg.color+'" stroke-width="14" stroke-dasharray="'+len+' '+(circ-len)+'" stroke-dashoffset="'+(-offset)+'" transform="rotate(-90 '+cx+' '+cy+')"/>';
+    offset += len;
+  });
+  return '<svg class="donut-svg" viewBox="0 0 100 100" width="130" height="130">'+circles+'<text x="50" y="54" text-anchor="middle" font-size="15" fill="var(--text)" font-weight="700">'+total+'</text></svg>';
+}
+function legendHTML(segments){
+  return '<div class="legend">'+segments.map(s=>'<div class="legend-item"><span class="legend-dot" style="background:'+s.color+'"></span>'+s.label+' <span style="color:var(--text-dim)">('+s.value+')</span></div>').join('')+'</div>';
+}
+
+function renderDashboard(){
+  const hr = new Date().getHours();
+  const greeting = hr<12?'Good morning':(hr<18?'Good afternoon':'Good evening');
+  const maint = DB.assets.length? DB.maintenance : [];
+  const statusCounts = {overdue:0,duesoon:0,watch:0,compliant:0,nodate:0};
+  DB.maintenance.forEach(t=>{ statusCounts[maintenanceStatus(t)]++; });
+  const renStatusCounts = {overdue:0,duesoon:0,watch:0,compliant:0,nodate:0};
+  DB.renewals.forEach(r=>{ renStatusCounts[renewalStatus(r)]++; });
+  const openQuotes = DB.quotes.filter(q=>['Requested','Chased','Received','Under review'].includes(q.status)).length;
+  const annualSpend = DB.renewals.reduce((s,r)=>s+(Number(r.annualCost)||0),0);
+  const mTotal = DB.maintenance.length||1;
+
+  const kpis = [
+    {num:statusCounts.overdue, label:'Overdue Tasks', cls: statusCounts.overdue>0?'alert':'', glow:'rgba(229,72,77,0.5)'},
+    {num:statusCounts.duesoon, label:'Due Soon Tasks', cls: statusCounts.duesoon>0?'warn':'', glow:'rgba(245,166,35,0.5)'},
+    {num:DB.assets.length, label:'Total Assets', cls:'', glow:'rgba(91,141,239,0.4)'},
+    {num:renStatusCounts.overdue+renStatusCounts.duesoon, label:'Renewals Due', cls:(renStatusCounts.overdue>0?'alert':(renStatusCounts.duesoon>0?'warn':'')), glow:'rgba(180,120,232,0.45)'},
+    {num:openQuotes, label:'Open Quotes', cls:'', glow:'rgba(63,187,109,0.4)'},
+    {num:fmtMoney(annualSpend), label:'Annual Committed Spend', cls:'', glow:'rgba(192,20,42,0.4)'}
+  ];
+
+  const urgentTasks = DB.maintenance
+    .map(t=>({t, due:nextDueDate(t), status:maintenanceStatus(t)}))
+    .filter(x=>x.due)
+    .sort((a,b)=> daysUntil(a.due)-daysUntil(b.due))
+    .slice(0,8);
+
+  document.getElementById('content').innerHTML = `
+    <div style="margin-bottom:18px;">
+      <div style="font-size:20px;font-weight:700;">${greeting}, ${esc(SESSION.name.split(' ')[0])}</div>
+      <div style="font-size:12.5px;color:var(--text-dim);margin-top:2px;">Here is what needs attention across CCI facilities today.</div>
+    </div>
+    <div class="grid kpi-grid">
+      ${kpis.map(k=>`<div class="glass kpi ${k.cls}"><div class="kpi-glow" style="background:${k.glow}"></div><div class="kpi-num">${k.num}</div><div class="kpi-label">${k.label}</div></div>`).join('')}
+    </div>
+    <div class="panels-row">
+      <div class="glass panel">
+        <div class="panel-head"><h3>Maintenance Tasks</h3>${ICONS.maintenance}</div>
+        <div class="panel-body">
+          ${statRow('overdue', 'Overdue', statusCounts.overdue, mTotal)}
+          ${statRow('duesoon', 'Due soon', statusCounts.duesoon, mTotal)}
+          ${statRow('watch', 'Watch', statusCounts.watch, mTotal)}
+          ${statRow('compliant', 'Compliant', statusCounts.compliant, mTotal)}
+          ${statRow('nodate', 'No date logged', statusCounts.nodate, mTotal)}
+        </div>
+        <div class="panel-foot"><button class="link-btn" data-action="navto" data-id="maintenance">See all &rarr;</button></div>
+      </div>
+      <div class="glass panel">
+        <div class="panel-head"><h3>Renewals &amp; Finance</h3>${ICONS.renewals}</div>
+        <div class="panel-body">
+          ${statRow('overdue', 'Renewals overdue', renStatusCounts.overdue, DB.renewals.length||1)}
+          ${statRow('duesoon', 'Renewals due soon', renStatusCounts.duesoon, DB.renewals.length||1)}
+          ${statRow('watch', 'Renewals watch', renStatusCounts.watch, DB.renewals.length||1)}
+          ${statRow('quote', 'Quotes awaiting decision', openQuotes, DB.quotes.length||1)}
+        </div>
+        <div class="panel-foot"><button class="link-btn" data-action="navto" data-id="renewals">See all &rarr;</button></div>
+      </div>
+    </div>
+    <div class="donuts-row">
+      <div class="glass donut-card">
+        ${donutSVG([
+          {value:statusCounts.overdue,color:'var(--st-overdue)',label:'Overdue'},
+          {value:statusCounts.duesoon,color:'var(--st-duesoon)',label:'Due soon'},
+          {value:statusCounts.watch,color:'var(--st-watch)',label:'Watch'},
+          {value:statusCounts.compliant,color:'var(--st-compliant)',label:'Compliant'},
+          {value:statusCounts.nodate,color:'var(--st-nodate)',label:'No date'}
+        ])}
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Task Status</div>
+          ${legendHTML([
+            {value:statusCounts.overdue,color:'var(--st-overdue)',label:'Overdue'},
+            {value:statusCounts.duesoon,color:'var(--st-duesoon)',label:'Due soon'},
+            {value:statusCounts.watch,color:'var(--st-watch)',label:'Watch'},
+            {value:statusCounts.compliant,color:'var(--st-compliant)',label:'Compliant'},
+            {value:statusCounts.nodate,color:'var(--st-nodate)',label:'No date'}
+          ])}
+        </div>
+      </div>
+      <div class="glass donut-card">
+        ${donutSVG(categoryDonutSegments())}
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Assets by Category</div>
+          ${legendHTML(categoryDonutSegments())}
+        </div>
+      </div>
+    </div>
+    <div class="glass urgent-list">
+      <div class="panel-head" style="border:none;"><h3>Most Urgent</h3></div>
+      ${urgentTasks.map((x,i)=>{
+        const asset=DB.assets.find(a=>a.id===x.t.assetId);
+        return `<div class="urgent-item" style="border-left-color:var(--st-${x.status})" data-action="openmaint" data-id="${x.t.id}">
+          <div class="urgent-rank">${i+1}</div>
+          <div class="urgent-main">
+            <div class="urgent-task">${esc(x.t.task)}</div>
+            <div class="urgent-sub">${esc(asset?asset.description:x.t.assetId)} &middot; ${esc(x.t.contractor||'—')}</div>
+          </div>
+          ${statusPill(x.status)}
+          <button class="btn btn-sm" data-action="donetoday" data-id="${x.t.id}">Done today</button>
+        </div>`;
+      }).join('') || '<div style="padding:16px;color:var(--text-dim);font-size:13px;">No dated tasks yet.</div>'}
+    </div>
+  `;
+}
+function statRow(status, label, count, total){
+  const pct = Math.round((count/total)*100);
+  const icoName = status==='quote' ? 'quotes' : status;
+  const color = status==='quote' ? 'var(--st-quote)' : 'var(--st-'+status+')';
+  return `<div class="stat-row"><div class="chip" style="background:${color}22;color:${color}">${ICONS[icoName]}</div><div class="stat-row-label">${label}</div><div class="stat-row-count">${count}</div><div class="stat-row-pct">${pct}%</div></div>`;
+}
+function categoryDonutSegments(){
+  const palette = ['#e5484d','#f5a623','#f7d716','#3fbb6d','#5b8def','#b478e8','#e05a9c','#4fc3d9','#9098a6','#c0142a','#8bd450'];
+  return CATEGORY_LIST.map((c,i)=>({value:DB.assets.filter(a=>a.category===c).length, color:palette[i%palette.length], label:c}));
+}
+ACTIONS.donetoday = (id)=>{
+  const t=DB.maintenance.find(x=>x.id===id);
+  if(!t) return;
+  t.lastCompleted = iso(TODAY);
+  saveDB();
+  toast('Marked "'+t.task+'" as done today', 'success');
+  refreshCurrentTab();
+};
+RENDERERS.dashboard = renderDashboard;
+
+function calendarEvents(){
+  const evts=[];
+  DB.maintenance.forEach(t=>{
+    const due=nextDueDate(t);
+    if(due) evts.push({date:due, title:t.task, color:'var(--st-'+maintenanceStatus(t)+')', type:'maintenance', refId:t.id});
+  });
+  DB.renewals.forEach(r=>{
+    if(r.expiryDate) evts.push({date:r.expiryDate, title:r.item+' — expires', color:'var(--st-renewal)', type:'renewal', refId:r.id});
+    const rev=renewalReviewDate(r);
+    if(rev) evts.push({date:rev, title:r.item+' — review', color:'var(--st-renewal)', type:'renewal', refId:r.id});
+  });
+  DB.quotes.forEach(q=>{
+    if(q.validUntil) evts.push({date:q.validUntil, title:q.description+' — valid until', color:'var(--st-quote)', type:'quote', refId:q.id});
+  });
+  return evts;
+}
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW_NAMES=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function monthMatrix(year, month){
+  const first = new Date(Date.UTC(year, month, 1));
+  let startDow = first.getUTCDay(); startDow = startDow===0?6:startDow-1;
+  const gridStart = new Date(Date.UTC(year, month, 1 - startDow));
+  const cells=[];
+  for(let i=0;i<42;i++) cells.push(new Date(Date.UTC(gridStart.getUTCFullYear(), gridStart.getUTCMonth(), gridStart.getUTCDate()+i)));
+  return cells;
+}
+function eventsOn(dateStr, evts){ return evts.filter(e=>e.date===dateStr); }
+function openEventDrawer(evt){
+  if(evt.type==='maintenance') ACTIONS.openmaint(evt.refId);
+  else if(evt.type==='renewal') ACTIONS.openrenewal(evt.refId);
+  else if(evt.type==='quote') ACTIONS.openquote(evt.refId);
+}
+
+function renderCalendar(){
+  const cal=UI.calendar;
+  document.getElementById('content').innerHTML = `
+    <div class="cal-toolbar">
+      <button class="btn btn-sm" data-action="cal-today">Today</button>
+      <button class="btn cal-nav-btn" data-action="cal-prev">${ICONS.chevleft}</button>
+      <button class="btn cal-nav-btn" data-action="cal-next">${ICONS.chevright}</button>
+      <div class="cal-title" id="cal-title"></div>
+      <div class="tb-spacer"></div>
+      <div class="mode-toggle glass">
+        <button class="mode-btn ${cal.view==='month'?'active':''}" data-action="cal-view" data-id="month">Month</button>
+        <button class="mode-btn ${cal.view==='week'?'active':''}" data-action="cal-view" data-id="week">Week</button>
+      </div>
+    </div>
+    <div class="cal-layout">
+      <div id="cal-main"></div>
+      <div id="cal-sidebar"></div>
+    </div>
+    <div class="cal-summary" id="cal-summary"></div>
+  `;
+  if(cal.view==='month') renderCalMonth(); else renderCalWeek();
+  renderCalSummary();
+}
+function renderCalMonth(){
+  const cal=UI.calendar;
+  const y=cal.date.getUTCFullYear? cal.date.getUTCFullYear():cal.date.getFullYear();
+  const m=cal.date.getUTCMonth? cal.date.getUTCMonth():cal.date.getMonth();
+  document.getElementById('cal-title').textContent = MONTH_NAMES[m]+' '+y;
+  const cells = monthMatrix(y,m);
+  const evts = calendarEvents();
+  const todayStr = iso(TODAY);
+  let html = '<div class="month-grid glass">';
+  DOW_NAMES.forEach(d=>html+='<div class="month-head">'+d+'</div>');
+  cells.forEach(cellDate=>{
+    const ds = iso(cellDate);
+    const inMonth = cellDate.getUTCMonth()===m;
+    const dayEvts = eventsOn(ds, evts);
+    const shown = dayEvts.slice(0,3);
+    const more = dayEvts.length-3;
+    html += `<div class="month-cell${inMonth?'':' other'}${cal.selectedDay===ds?' selected':''}" data-action="cal-select-day" data-id="${ds}">
+      <div class="cell-date${ds===todayStr?' today':''}">${cellDate.getUTCDate()}</div>
+      ${shown.map(e=>`<div class="evt-chip" style="background:${e.color}33;color:${e.color}" data-action="cal-open-evt" data-id="${e.type}|${e.refId}|${e.date}">${esc(e.title)}</div>`).join('')}
+      ${more>0?`<div class="evt-more">+${more} more</div>`:''}
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('cal-main').innerHTML = html;
+  document.getElementById('cal-sidebar').innerHTML = renderDayPanel(evts);
+}
+function renderCalWeek(){
+  const cal=UI.calendar;
+  const d = new Date(cal.date);
+  let dow = d.getUTCDay(); dow = dow===0?6:dow-1;
+  const weekStart = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()-dow));
+  const days = [...Array(7)].map((_,i)=> new Date(Date.UTC(weekStart.getUTCFullYear(), weekStart.getUTCMonth(), weekStart.getUTCDate()+i)));
+  document.getElementById('cal-title').textContent = fmtDate(iso(days[0]))+' – '+fmtDate(iso(days[6]));
+  const evts = calendarEvents();
+  const todayStr = iso(TODAY);
+  let html = '<div class="week-grid glass"><div class="week-head-cell"></div>';
+  days.forEach(dt=>{ const ds=iso(dt); html+=`<div class="week-head-cell${ds===todayStr?' today':''}" data-action="cal-select-day" data-id="${ds}">${DOW_NAMES[dt.getUTCDay()===0?6:dt.getUTCDay()-1]}<br><span style="font-size:13px;">${dt.getUTCDate()}</span></div>`; });
+  html += '<div class="week-time">All day</div>';
+  days.forEach(dt=>{
+    const ds=iso(dt);
+    const dayEvts=eventsOn(ds,evts);
+    html += `<div class="week-cell" data-action="cal-select-day" data-id="${ds}">${dayEvts.map(e=>`<div class="evt-chip" style="background:${e.color}33;color:${e.color};margin-bottom:2px;" data-action="cal-open-evt" data-id="${e.type}|${e.refId}|${e.date}">${esc(e.title)}</div>`).join('')}</div>`;
+  });
+  html += '</div>';
+  document.getElementById('cal-main').innerHTML = html;
+  document.getElementById('cal-sidebar').innerHTML = renderMiniMonth() + renderDayPanel(evts);
+}
+function renderMiniMonth(){
+  const cal=UI.calendar;
+  const y=cal.date.getUTCFullYear(), m=cal.date.getUTCMonth();
+  const cells=monthMatrix(y,m);
+  const todayStr=iso(TODAY);
+  return `<div class="glass mini-month" style="margin-bottom:14px;">
+    <div style="font-size:12.5px;font-weight:700;margin-bottom:8px;">${MONTH_NAMES[m]} ${y}</div>
+    <div class="mini-grid">
+      ${DOW_NAMES.map(d=>'<div style="color:var(--text-dim);">'+d[0]+'</div>').join('')}
+      ${cells.map(c=>{const ds=iso(c); return `<div class="mini-day${ds===todayStr?' today':''}" data-action="cal-jump-day" data-id="${ds}" style="${c.getUTCMonth()!==m?'opacity:.35;':''}">${c.getUTCDate()}</div>`;}).join('')}
+    </div>
+  </div>`;
+}
+function renderDayPanel(evts){
+  const cal=UI.calendar;
+  const ds = cal.selectedDay || iso(TODAY);
+  const dayEvts = eventsOn(ds, evts);
+  return `<div class="glass day-panel">
+    <h4>${fmtDate(ds)}</h4>
+    ${dayEvts.length? dayEvts.map(e=>`<div class="day-evt" style="border-left-color:${e.color}" data-action="cal-open-evt" data-id="${e.type}|${e.refId}|${e.date}">${esc(e.title)}</div>`).join('') : '<div style="color:var(--text-dim);font-size:12.5px;">No events on this day.</div>'}
+  </div>`;
+}
+function renderCalSummary(){
+  const y=UI.calendar.date.getUTCFullYear(), m=UI.calendar.date.getUTCMonth();
+  const evts = calendarEvents().filter(e=>{ const d=new Date(e.date+'T00:00:00Z'); return d.getUTCFullYear()===y && d.getUTCMonth()===m; });
+  const byType = {maintenance:0, renewal:0, quote:0};
+  evts.forEach(e=>byType[e.type]++);
+  document.getElementById('cal-summary').innerHTML = `
+    <div class="glass summary-pill">${evts.length} events this month</div>
+    <div class="glass summary-pill">${byType.maintenance} maintenance</div>
+    <div class="glass summary-pill">${byType.renewal} renewals</div>
+    <div class="glass summary-pill">${byType.quote} quotes</div>
+  `;
+}
+ACTIONS['cal-today']=()=>{ UI.calendar.date=new Date(); UI.calendar.selectedDay=iso(TODAY); renderCalendar(); };
+ACTIONS['cal-prev']=()=>{ const c=UI.calendar; if(c.view==='month') c.date=new Date(Date.UTC(c.date.getUTCFullYear(), c.date.getUTCMonth()-1, 1)); else c.date=addDays(c.date,-7); renderCalendar(); };
+ACTIONS['cal-next']=()=>{ const c=UI.calendar; if(c.view==='month') c.date=new Date(Date.UTC(c.date.getUTCFullYear(), c.date.getUTCMonth()+1, 1)); else c.date=addDays(c.date,7); renderCalendar(); };
+ACTIONS['cal-view']=(id)=>{ UI.calendar.view=id; renderCalendar(); };
+ACTIONS['cal-select-day']=(id)=>{ UI.calendar.selectedDay=id; renderCalendar(); };
+ACTIONS['cal-jump-day']=(id)=>{ UI.calendar.selectedDay=id; UI.calendar.date=new Date(id+'T00:00:00Z'); renderCalendar(); };
+ACTIONS['cal-open-evt']=(id)=>{ const [type,refId,date]=id.split('|'); openEventDrawer({type,refId,date}); };
+UI.calendar.date = new Date(Date.UTC(TODAY.getUTCFullYear(), TODAY.getUTCMonth(), 1));
+UI.calendar.selectedDay = iso(TODAY);
+RENDERERS.calendar = renderCalendar;
+
+function formField(f){
+  const cls = f.full?' full':'';
+  let input;
+  const val = f.value==null?'':f.value;
+  if(f.type==='select'){
+    input = `<select id="f_${f.key}">${(f.options||[]).map(o=>`<option value="${esc(o)}" ${String(o)===String(val)?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  } else if(f.type==='textarea'){
+    input = `<textarea id="f_${f.key}">${esc(val)}</textarea>`;
+  } else {
+    input = `<input id="f_${f.key}" type="${f.type||'text'}" value="${esc(val)}" ${f.step?'step="'+f.step+'"':''} ${f.readonly?'readonly':''}>`;
+  }
+  return `<div class="field${cls}"><label>${esc(f.label)}</label>${input}</div>`;
+}
+function readField(key){ const el=document.getElementById('f_'+key); return el?el.value:''; }
+
+function renderRecordTable(cfg){
+  const state = UI[cfg.tabKey];
+  const all = cfg.data();
+  const q = (state.search||'').toLowerCase();
+  const rows = all.filter(r=> cfg.matchesFilter(r,state.filter) && (!q || cfg.searchText(r).toLowerCase().includes(q)) );
+  const editable = cfg.editable;
+  let html = `<div class="toolbar">
+    <input class="search-input" placeholder="${cfg.searchPlaceholder||'Search...'}" value="${esc(state.search)}" data-action="rt-search" data-id="${cfg.tabKey}">
+    ${cfg.filters.map(f=>`<button class="filter-chip ${state.filter===f.key?'active':''}" data-action="rt-filter" data-id="${cfg.tabKey}|${f.key}">${f.label}</button>`).join('')}
+    <div class="tb-spacer"></div>
+    ${editable? `<button class="btn btn-primary" data-action="rt-add" data-id="${cfg.tabKey}">${ICONS.plus} Add</button>`:''}
+    <button class="btn" data-action="rt-export" data-id="${cfg.tabKey}">${ICONS.download} Export CSV</button>
+  </div>
+  <div class="glass table-wrap"><table><thead><tr>
+    <th class="checkbox-cell"><input type="checkbox" data-action="rt-selall" data-id="${cfg.tabKey}" ${rows.length && rows.every(r=>state.sel.has(cfg.idOf(r)))?'checked':''}></th>
+    ${cfg.columns.map(c=>`<th>${c.label}</th>`).join('')}
+    ${editable?'<th></th>':''}
+  </tr></thead><tbody>
+  ${rows.map(r=>{
+    const id=cfg.idOf(r);
+    return `<tr data-action="rt-rowclick" data-id="${cfg.tabKey}|${esc(id)}">
+      <td class="checkbox-cell"><input type="checkbox" data-action="rt-selrow" data-id="${cfg.tabKey}|${esc(id)}" ${state.sel.has(id)?'checked':''}></td>
+      ${cfg.columns.map(c=>`<td class="${c.wrap?'wrap':''}">${c.get(r)}</td>`).join('')}
+      ${editable?`<td><button class="row-del" data-action="rt-delrow" data-id="${cfg.tabKey}|${esc(id)}">${ICONS.close}</button></td>`:''}
+    </tr>`;
+  }).join('') || `<tr><td colspan="20" style="padding:24px;text-align:center;color:var(--text-dim);">No records found.</td></tr>`}
+  </tbody></table></div>
+  ${state.sel.size? `<div class="glass bulk-bar"><span>${state.sel.size} selected</span><div class="tb-spacer"></div><button class="btn btn-danger" data-action="rt-bulkdel" data-id="${cfg.tabKey}">Delete selected</button><button class="btn" data-action="rt-clearsel" data-id="${cfg.tabKey}">Clear selection</button></div>`:''}
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+const TABLE_CFG = {};
+function currentTableCfg(){ return TABLE_CFG[ACTIVE_TAB] ? TABLE_CFG[ACTIVE_TAB]() : null; }
+
+ACTIONS['rt-search']=()=>{};
+ACTIONS['rt-filter']=(id)=>{ const [tab,key]=id.split('|'); UI[tab].filter=key; RENDERERS[tab](); };
+ACTIONS['rt-add']=(id)=>{ TABLE_CFG[id]().onAdd(); };
+ACTIONS['rt-export']=(id)=>{ const cfg=TABLE_CFG[id](); const rows=cfg.data().filter(r=>cfg.matchesFilter(r,UI[id].filter) && (!UI[id].search || cfg.searchText(r).toLowerCase().includes(UI[id].search.toLowerCase()))); exportCSV(rows, cfg.exportColumns, id+'.csv'); };
+ACTIONS['rt-selall']=(id, el)=>{ const cfg=TABLE_CFG[id](); const state=UI[id]; const rows=cfg.data().filter(r=>cfg.matchesFilter(r,state.filter) && (!state.search || cfg.searchText(r).toLowerCase().includes(state.search.toLowerCase()))); if(el.checked){ rows.forEach(r=>state.sel.add(cfg.idOf(r))); } else { rows.forEach(r=>state.sel.delete(cfg.idOf(r))); } RENDERERS[id](); };
+ACTIONS['rt-selrow']=(id,el)=>{ const [tab,rid]=id.split('|'); const state=UI[tab]; if(el.checked) state.sel.add(rid); else state.sel.delete(rid); RENDERERS[tab](); };
+ACTIONS['rt-clearsel']=(id)=>{ UI[id].sel.clear(); RENDERERS[id](); };
+ACTIONS['rt-delrow']=(id)=>{ const [tab,rid]=id.split('|'); const cfg=TABLE_CFG[tab](); openModal({title:'Delete record', body:'This will permanently remove this record. This cannot be undone.', confirmLabel:'Delete', danger:true, onConfirm:()=>{ cfg.remove(rid); UI[tab].sel.delete(rid); saveDB(); toast('Record deleted', 'success'); RENDERERS[tab](); }}); };
+ACTIONS['rt-bulkdel']=(id)=>{ const state=UI[id]; const cfg=TABLE_CFG[id](); const n=state.sel.size; openModal({title:'Delete '+n+' records', body:'This will permanently remove '+n+' record(s). This cannot be undone.', confirmLabel:'Delete all', danger:true, onConfirm:()=>{ state.sel.forEach(rid=>cfg.remove(rid)); state.sel.clear(); saveDB(); toast(n+' records deleted', 'success'); RENDERERS[id](); }}); };
+ACTIONS['rt-rowclick']=(id)=>{ const [tab,rid]=id.split('|'); TABLE_CFG[tab]().onRowClick(rid); };
+
+const RESPONSIBLE_OPTIONS = ['Facilities Manager','Site Warden','Operations Lead','Premises Officer','Kitchen Lead','AV Lead','IT Lead','Music Director'];
+function disableIfReadOnly(editable){ if(!editable) document.querySelectorAll('#drawer-body input,#drawer-body select,#drawer-body textarea').forEach(el=>el.disabled=true); }
+function assetSelectOptions(selected){ return '<option value="">—</option>'+DB.assets.map(a=>`<option value="${esc(a.id)}" ${a.id===selected?'selected':''}>${esc(a.id)} — ${esc(a.description)}</option>`).join(''); }
+function contractorSelectOptions(selected, extra){ const names=DB.contractors.map(c=>c.company).concat(extra||[]); return names.map(c=>`<option ${c===selected?'selected':''}>${esc(c)}</option>`).join(''); }
+
+ACTIONS['drawer-discard']=()=>closeDrawer();
+ACTIONS['drawer-delete']=(id)=>{ const [tab,rid]=id.split('|'); openModal({title:'Delete record', body:'This will permanently remove this record. This cannot be undone.', confirmLabel:'Delete', danger:true, onConfirm:()=>{ TABLE_CFG[tab]().remove(rid); saveDB(); closeDrawer(); toast('Record deleted', 'success'); RENDERERS[tab](); }}); };
+
+/* ---- Asset Register ---- */
+function openAssetDrawer(id){
+  const isNew = !id;
+  const editable = canEditTab('assets');
+  const a = isNew ? {id:'',category:CATEGORY_LIST[0],subCategory:'',description:'',make:'',model:'',serial:'',location:'',subLocation:'',quantity:1,installDate:'',purchaseCost:'',lifeYears:'',replacementCost:'',warrantyExpiry:'',condition:3,criticality:'Medium',responsible:'Facilities Manager',contractor:DB.contractors[0]?DB.contractors[0].company:'',statutory:'No',lastVerified:'',notes:''} : DB.assets.find(x=>x.id===id);
+  const genId = isNew ? nextAssetId(a.category) : a.id;
+  const body = `<div class="form-grid">
+    <div class="field"><label>Asset ID</label><input id="f_id" value="${esc(genId)}" readonly></div>
+    <div class="field"><label>Category</label><select id="f_category">${CATEGORY_LIST.map(c=>`<option ${c===a.category?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+    ${formField({key:'subCategory',label:'Sub-category',value:a.subCategory})}
+    ${formField({key:'description',label:'Description',value:a.description,full:true})}
+    ${formField({key:'make',label:'Make',value:a.make})}
+    ${formField({key:'model',label:'Model',value:a.model})}
+    ${formField({key:'serial',label:'Serial number',value:a.serial})}
+    ${formField({key:'location',label:'Location',value:a.location})}
+    ${formField({key:'subLocation',label:'Sub-location',value:a.subLocation})}
+    ${formField({key:'quantity',label:'Quantity',value:a.quantity,type:'number'})}
+    ${formField({key:'installDate',label:'Install date',value:a.installDate,type:'date'})}
+    ${formField({key:'purchaseCost',label:'Purchase cost (£)',value:a.purchaseCost,type:'number',step:'0.01'})}
+    ${formField({key:'lifeYears',label:'Expected life (years)',value:a.lifeYears,type:'number'})}
+    ${formField({key:'replacementCost',label:'Replacement cost (£)',value:a.replacementCost,type:'number',step:'0.01'})}
+    ${formField({key:'warrantyExpiry',label:'Warranty expiry',value:a.warrantyExpiry,type:'date'})}
+    <div class="field"><label>Condition</label><select id="f_condition">${[1,2,3,4,5].map(n=>`<option value="${n}" ${n===a.condition?'selected':''}>${n} — ${['Very poor','Poor','Fair','Good','Excellent'][n-1]}</option>`).join('')}</select></div>
+    <div class="field"><label>Criticality</label><select id="f_criticality">${['High','Medium','Low'].map(c=>`<option ${c===a.criticality?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="field"><label>Responsible</label><select id="f_responsible">${RESPONSIBLE_OPTIONS.map(r=>`<option ${r===a.responsible?'selected':''}>${esc(r)}</option>`).join('')}</select></div>
+    <div class="field"><label>Contractor</label><select id="f_contractor">${contractorSelectOptions(a.contractor)}</select></div>
+    <div class="field"><label>Statutory</label><select id="f_statutory">${['Yes','No'].map(s=>`<option ${s===a.statutory?'selected':''}>${s}</option>`).join('')}</select></div>
+    ${formField({key:'lastVerified',label:'Last verified',value:a.lastVerified,type:'date'})}
+    ${formField({key:'notes',label:'Notes',value:a.notes,type:'textarea',full:true})}
+  </div>`;
+  const foot = editable ? `<button class="btn" data-action="drawer-discard">Discard</button>${!isNew?`<button class="btn btn-danger" data-action="drawer-delete" data-id="assets|${esc(a.id)}">Delete</button>`:''}<button class="btn btn-primary" data-action="drawer-save-asset" data-id="${isNew?'':esc(a.id)}">Save</button>` : `<button class="btn btn-block" data-action="drawer-discard">Close</button>`;
+  openDrawer({title:isNew?'Add asset':a.description, sub:isNew?'The asset ID is generated automatically from the category.':'Asset ID '+a.id, body, foot});
+  disableIfReadOnly(editable);
+  const catSel=document.getElementById('f_category');
+  if(catSel && editable) catSel.addEventListener('change', ()=>{ document.getElementById('f_id').value = isNew ? nextAssetId(catSel.value) : a.id; });
+}
+ACTIONS['drawer-save-asset']=(id)=>{
+  const isNew=!id;
+  const rec={ id:isNew?readField('id'):id, category:readField('category'), subCategory:readField('subCategory'), description:readField('description'),
+    make:readField('make'), model:readField('model'), serial:readField('serial'), location:readField('location'), subLocation:readField('subLocation'),
+    quantity:readField('quantity'), installDate:readField('installDate'), purchaseCost:readField('purchaseCost'), lifeYears:readField('lifeYears'),
+    replacementCost:readField('replacementCost'), warrantyExpiry:readField('warrantyExpiry'), condition:Number(readField('condition')),
+    criticality:readField('criticality'), responsible:readField('responsible'), contractor:readField('contractor'), statutory:readField('statutory'),
+    lastVerified:readField('lastVerified'), notes:readField('notes') };
+  if(!rec.description.trim()){ toast('Description is required', 'error'); return; }
+  if(isNew) DB.assets.push(rec); else { const idx=DB.assets.findIndex(x=>x.id===id); DB.assets[idx]=rec; }
+  saveDB(); closeDrawer(); toast('Asset saved', 'success'); refreshCurrentTab();
+};
+TABLE_CFG.assets = function(){ return {
+  tabKey:'assets', data:()=>DB.assets, idOf:r=>r.id, editable:canEditTab('assets'), searchPlaceholder:'Search assets…',
+  searchText:r=>[r.id,r.description,r.category,r.subCategory,r.location,r.make,r.model,r.serial].join(' '),
+  filters:[{key:'all',label:'All'},{key:'high',label:'High criticality'},{key:'statutory',label:'Statutory'},{key:'poor',label:'Poor condition'}],
+  matchesFilter:(r,f)=> f==='high'?r.criticality==='High': f==='statutory'?r.statutory==='Yes': f==='poor'?Number(r.condition)<=2: true,
+  columns:[
+    {label:'ID',get:r=>'<b>'+esc(r.id)+'</b>'},{label:'Category',get:r=>esc(r.category)},{label:'Description',get:r=>esc(r.description),wrap:true},
+    {label:'Location',get:r=>esc(r.location)},{label:'Condition',get:r=>r.condition+'/5'},{label:'Criticality',get:r=>esc(r.criticality)},{label:'Statutory',get:r=>esc(r.statutory)}
+  ],
+  exportColumns:[{label:'ID',get:r=>r.id},{label:'Category',get:r=>r.category},{label:'Sub-category',get:r=>r.subCategory},{label:'Description',get:r=>r.description},
+    {label:'Make',get:r=>r.make},{label:'Model',get:r=>r.model},{label:'Serial',get:r=>r.serial},{label:'Location',get:r=>r.location},{label:'Sub-location',get:r=>r.subLocation},
+    {label:'Quantity',get:r=>r.quantity},{label:'Install date',get:r=>r.installDate},{label:'Purchase cost',get:r=>r.purchaseCost},{label:'Life years',get:r=>r.lifeYears},
+    {label:'Replacement cost',get:r=>r.replacementCost},{label:'Warranty expiry',get:r=>r.warrantyExpiry},{label:'Condition',get:r=>r.condition},{label:'Criticality',get:r=>r.criticality},
+    {label:'Responsible',get:r=>r.responsible},{label:'Contractor',get:r=>r.contractor},{label:'Statutory',get:r=>r.statutory},{label:'Last verified',get:r=>r.lastVerified},{label:'Notes',get:r=>r.notes}],
+  onAdd:()=>openAssetDrawer(null), onRowClick:rid=>openAssetDrawer(rid), remove:rid=>{ DB.assets=DB.assets.filter(x=>x.id!==rid); }
+};};
+RENDERERS.assets = ()=>renderRecordTable(TABLE_CFG.assets());
+
+/* ---- Maintenance ---- */
+function openMaintenanceDrawer(id){
+  const isNew=!id;
+  const editable=canEditTab('maintenance');
+  const m = isNew ? {id:'',assetId:'',task:'',type:'Routine',frequency:'Annual',lastCompleted:'',contractor:'',lastCost:'',certRef:'',basis:'',applies:'Confirmed',notes:''} : DB.maintenance.find(x=>x.id===id);
+  const due = isNew? '' : nextDueDate(m);
+  const status = isNew? '' : maintenanceStatus(m);
+  const body = `<div class="form-grid">
+    <div class="field full"><label>Asset</label><select id="f_assetId">${assetSelectOptions(m.assetId)}</select></div>
+    ${formField({key:'task',label:'Task',value:m.task,full:true})}
+    <div class="field"><label>Type</label><select id="f_type">${['Statutory','Servicing','Routine','Renewal'].map(t=>`<option ${t===m.type?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="field"><label>Frequency</label><select id="f_frequency">${Object.keys(FREQ_STEP).map(t=>`<option ${t===m.frequency?'selected':''}>${t}</option>`).join('')}</select></div>
+    ${formField({key:'lastCompleted',label:'Last completed',value:m.lastCompleted,type:'date'})}
+    ${!isNew?`<div class="field"><label>Next due (calculated)</label><input value="${due?fmtDate(due):'—'}" readonly></div>`:''}
+    <div class="field"><label>Contractor</label><select id="f_contractor">${contractorSelectOptions(m.contractor,['Facilities Manager (in-house)'])}</select></div>
+    ${formField({key:'lastCost',label:'Last cost (£)',value:m.lastCost,type:'number',step:'0.01'})}
+    ${formField({key:'certRef',label:'Certificate reference',value:m.certRef})}
+    ${formField({key:'basis',label:'Legal / basis citation',value:m.basis})}
+    <div class="field"><label>Applies to this church</label><select id="f_applies">${['Confirmed','To confirm','Not applicable'].map(t=>`<option ${t===m.applies?'selected':''}>${t}</option>`).join('')}</select></div>
+    ${!isNew?`<div class="field"><label>Status (calculated)</label><input value="${STATUS_LABEL[status]}" readonly></div>`:''}
+    ${formField({key:'notes',label:'Notes',value:m.notes,type:'textarea',full:true})}
+  </div>`;
+  const foot = editable ? `<button class="btn" data-action="drawer-discard">Discard</button>${!isNew?`<button class="btn btn-danger" data-action="drawer-delete" data-id="maintenance|${esc(m.id)}">Delete</button><button class="btn" data-action="mt-donetoday" data-id="${esc(m.id)}">Done today</button>`:''}<button class="btn btn-primary" data-action="drawer-save-maintenance" data-id="${isNew?'':esc(m.id)}">Save</button>` : `<button class="btn btn-block" data-action="drawer-discard">Close</button>`;
+  openDrawer({title:isNew?'Add maintenance task':m.task, sub:isNew?'Schedule a new recurring or one-off task.':'Linked to asset '+m.assetId, body, foot});
+  disableIfReadOnly(editable);
+}
+ACTIONS['mt-donetoday']=(id)=>{ ACTIONS.donetoday(id); closeDrawer(); };
+ACTIONS['drawer-save-maintenance']=(id)=>{
+  const isNew=!id;
+  const rec={ id:isNew?uid('MT'):id, assetId:readField('assetId'), task:readField('task'), type:readField('type'), frequency:readField('frequency'),
+    lastCompleted:readField('lastCompleted'), contractor:readField('contractor'), lastCost:readField('lastCost'), certRef:readField('certRef'),
+    basis:readField('basis'), applies:readField('applies'), notes:readField('notes') };
+  if(!rec.task.trim()){ toast('Task name is required', 'error'); return; }
+  if(isNew) DB.maintenance.push(rec); else { const idx=DB.maintenance.findIndex(x=>x.id===id); DB.maintenance[idx]=rec; }
+  saveDB(); closeDrawer(); toast('Maintenance task saved', 'success'); refreshCurrentTab();
+};
+TABLE_CFG.maintenance = function(){ return {
+  tabKey:'maintenance', data:()=>DB.maintenance, idOf:r=>r.id, editable:canEditTab('maintenance'), searchPlaceholder:'Search maintenance…',
+  searchText:r=>[r.task,r.assetId,r.contractor,r.basis,r.certRef,r.type].join(' '),
+  filters:[{key:'all',label:'All'},{key:'overdue',label:'Overdue'},{key:'duesoon',label:'Due soon'},{key:'watch',label:'Watch'},{key:'statutory',label:'Statutory'}],
+  matchesFilter:(r,f)=> f==='statutory'?r.type==='Statutory': f==='all'?true: maintenanceStatus(r)===f,
+  columns:[
+    {label:'Task',get:r=>esc(r.task),wrap:true},{label:'Asset',get:r=>esc(r.assetId)},{label:'Type',get:r=>esc(r.type)},{label:'Frequency',get:r=>esc(r.frequency)},
+    {label:'Next due',get:r=>{const d=nextDueDate(r); return d?fmtDate(d):'—';}},{label:'Status',get:r=>statusPill(maintenanceStatus(r))},{label:'Contractor',get:r=>esc(r.contractor)}
+  ],
+  exportColumns:[{label:'ID',get:r=>r.id},{label:'Asset',get:r=>r.assetId},{label:'Task',get:r=>r.task},{label:'Type',get:r=>r.type},{label:'Frequency',get:r=>r.frequency},
+    {label:'Last completed',get:r=>r.lastCompleted},{label:'Next due',get:r=>nextDueDate(r)},{label:'Status',get:r=>STATUS_LABEL[maintenanceStatus(r)]},{label:'Contractor',get:r=>r.contractor},
+    {label:'Last cost',get:r=>r.lastCost},{label:'Cert ref',get:r=>r.certRef},{label:'Basis',get:r=>r.basis},{label:'Applies',get:r=>r.applies},{label:'Notes',get:r=>r.notes}],
+  onAdd:()=>openMaintenanceDrawer(null), onRowClick:rid=>openMaintenanceDrawer(rid), remove:rid=>{ DB.maintenance=DB.maintenance.filter(x=>x.id!==rid); }
+};};
+RENDERERS.maintenance = ()=>renderRecordTable(TABLE_CFG.maintenance());
+ACTIONS.openmaint = (id)=>openMaintenanceDrawer(id);
+
+/* ---- Renewals ---- */
+function openRenewalDrawer(id){
+  const isNew=!id;
+  const editable=canEditTab('renewals');
+  const r = isNew ? {id:'',item:'',provider:'',contact:'',ref:'',startDate:'',expiryDate:'',annualCost:'',autoRenew:'No',noticeDays:30,notes:''} : DB.renewals.find(x=>x.id===id);
+  const status = isNew? '' : renewalStatus(r);
+  const body = `<div class="form-grid">
+    ${formField({key:'item',label:'Item / policy',value:r.item,full:true})}
+    ${formField({key:'provider',label:'Provider',value:r.provider})}
+    ${formField({key:'contact',label:'Contact',value:r.contact})}
+    ${formField({key:'ref',label:'Reference',value:r.ref})}
+    ${formField({key:'startDate',label:'Start date',value:r.startDate,type:'date'})}
+    ${formField({key:'expiryDate',label:'Expiry date',value:r.expiryDate,type:'date'})}
+    ${formField({key:'annualCost',label:'Annual cost (£)',value:r.annualCost,type:'number',step:'0.01'})}
+    <div class="field"><label>Auto-renew</label><select id="f_autoRenew">${['Yes','No'].map(t=>`<option ${t===r.autoRenew?'selected':''}>${t}</option>`).join('')}</select></div>
+    ${formField({key:'noticeDays',label:'Notice period (days)',value:r.noticeDays,type:'number'})}
+    ${!isNew?`<div class="field"><label>Review date (calculated)</label><input value="${fmtDate(renewalReviewDate(r))}" readonly></div>
+    <div class="field"><label>Status (calculated)</label><input value="${STATUS_LABEL[status]}" readonly></div>`:''}
+    ${formField({key:'notes',label:'Notes',value:r.notes,type:'textarea',full:true})}
+  </div>`;
+  const foot = editable ? `<button class="btn" data-action="drawer-discard">Discard</button>${!isNew?`<button class="btn btn-danger" data-action="drawer-delete" data-id="renewals|${esc(r.id)}">Delete</button>`:''}<button class="btn btn-primary" data-action="drawer-save-renewal" data-id="${isNew?'':esc(r.id)}">Save</button>` : `<button class="btn btn-block" data-action="drawer-discard">Close</button>`;
+  openDrawer({title:isNew?'Add renewal':r.item, sub:isNew?'Track an insurance policy, contract or subscription.':'Provider: '+r.provider, body, foot});
+  disableIfReadOnly(editable);
+}
+ACTIONS['drawer-save-renewal']=(id)=>{
+  const isNew=!id;
+  const rec={ id:isNew?uid('RN'):id, item:readField('item'), provider:readField('provider'), contact:readField('contact'), ref:readField('ref'),
+    startDate:readField('startDate'), expiryDate:readField('expiryDate'), annualCost:readField('annualCost'), autoRenew:readField('autoRenew'),
+    noticeDays:readField('noticeDays'), notes:readField('notes') };
+  if(!rec.item.trim()){ toast('Item name is required', 'error'); return; }
+  if(isNew) DB.renewals.push(rec); else { const idx=DB.renewals.findIndex(x=>x.id===id); DB.renewals[idx]=rec; }
+  saveDB(); closeDrawer(); toast('Renewal saved', 'success'); refreshCurrentTab();
+};
+TABLE_CFG.renewals = function(){ return {
+  tabKey:'renewals', data:()=>DB.renewals, idOf:r=>r.id, editable:canEditTab('renewals'), searchPlaceholder:'Search renewals…',
+  searchText:r=>[r.item,r.provider,r.ref,r.contact].join(' '),
+  filters:[{key:'all',label:'All'},{key:'overdue',label:'Overdue'},{key:'duesoon',label:'Due soon'},{key:'watch',label:'Watch'},{key:'autorenew',label:'Auto-renew'}],
+  matchesFilter:(r,f)=> f==='autorenew'?r.autoRenew==='Yes': f==='all'?true: renewalStatus(r)===f,
+  columns:[
+    {label:'Item',get:r=>esc(r.item),wrap:true},{label:'Provider',get:r=>esc(r.provider)},{label:'Expiry',get:r=>fmtDate(r.expiryDate)},
+    {label:'Review date',get:r=>fmtDate(renewalReviewDate(r))},{label:'Status',get:r=>statusPill(renewalStatus(r))},{label:'Annual cost',get:r=>fmtMoney(r.annualCost)}
+  ],
+  exportColumns:[{label:'Item',get:r=>r.item},{label:'Provider',get:r=>r.provider},{label:'Contact',get:r=>r.contact},{label:'Reference',get:r=>r.ref},
+    {label:'Start date',get:r=>r.startDate},{label:'Expiry date',get:r=>r.expiryDate},{label:'Annual cost',get:r=>r.annualCost},{label:'Auto-renew',get:r=>r.autoRenew},
+    {label:'Notice days',get:r=>r.noticeDays},{label:'Review date',get:r=>renewalReviewDate(r)},{label:'Status',get:r=>STATUS_LABEL[renewalStatus(r)]},{label:'Notes',get:r=>r.notes}],
+  onAdd:()=>openRenewalDrawer(null), onRowClick:rid=>openRenewalDrawer(rid), remove:rid=>{ DB.renewals=DB.renewals.filter(x=>x.id!==rid); }
+};};
+RENDERERS.renewals = ()=>renderRecordTable(TABLE_CFG.renewals());
+ACTIONS.openrenewal = (id)=>openRenewalDrawer(id);
+
+/* ---- Quotes ---- */
+const QUOTE_STATUSES=['Requested','Chased','Received','Under review','Accepted','Rejected','Expired','Completed'];
+function openQuoteDrawer(id){
+  const isNew=!id;
+  const editable=canEditTab('quotes');
+  const q = isNew ? {id:'',ref:'',dateRequested:iso(TODAY),dateReceived:'',contractor:'',assetId:'',description:'',category:'Reactive',exVat:'',vat:'',validUntil:'',status:'Requested',decisionDate:'',rationale:'',approvalRef:'',invoiced:'No',invoiceDate:'',paymentDate:'',warranty:'',invoiceAmount:'',notes:''} : DB.quotes.find(x=>x.id===id);
+  const total = quoteTotal(q); const variance = quoteVariance(q); const variancePct = quoteVariancePct(q);
+  const body = `<div class="form-grid">
+    ${!isNew?`<div class="field"><label>Reference</label><input value="${esc(q.ref)}" readonly></div>`:''}
+    <div class="field full"><label>Contractor</label><select id="f_contractor">${contractorSelectOptions(q.contractor)}</select></div>
+    ${formField({key:'description',label:'Description',value:q.description,full:true})}
+    <div class="field"><label>Asset</label><select id="f_assetId">${assetSelectOptions(q.assetId)}</select></div>
+    <div class="field"><label>Category</label><select id="f_category">${['Reactive','Planned','Improvement','Statutory'].map(t=>`<option ${t===q.category?'selected':''}>${t}</option>`).join('')}</select></div>
+    ${formField({key:'dateRequested',label:'Date requested',value:q.dateRequested,type:'date'})}
+    ${formField({key:'dateReceived',label:'Date received',value:q.dateReceived,type:'date'})}
+    ${formField({key:'exVat',label:'Cost ex VAT (£)',value:q.exVat,type:'number',step:'0.01'})}
+    ${formField({key:'vat',label:'VAT (£)',value:q.vat,type:'number',step:'0.01'})}
+    ${!isNew?`<div class="field"><label>Total (calculated)</label><input value="${fmtMoney(total)}" readonly></div>`:''}
+    ${formField({key:'validUntil',label:'Valid until',value:q.validUntil,type:'date'})}
+    <div class="field"><label>Status</label><select id="f_status">${QUOTE_STATUSES.map(t=>`<option ${t===q.status?'selected':''}>${t}</option>`).join('')}</select></div>
+    ${formField({key:'decisionDate',label:'Decision date',value:q.decisionDate,type:'date'})}
+    ${formField({key:'approvalRef',label:'Approval reference',value:q.approvalRef})}
+    ${formField({key:'rationale',label:'Rationale',value:q.rationale,full:true,type:'textarea'})}
+    <div class="field"><label>Invoiced</label><select id="f_invoiced">${['Yes','No'].map(t=>`<option ${t===q.invoiced?'selected':''}>${t}</option>`).join('')}</select></div>
+    ${formField({key:'invoiceAmount',label:'Invoice amount ex VAT (£)',value:q.invoiceAmount,type:'number',step:'0.01'})}
+    ${formField({key:'invoiceDate',label:'Invoice date',value:q.invoiceDate,type:'date'})}
+    ${formField({key:'paymentDate',label:'Payment date',value:q.paymentDate,type:'date'})}
+    ${formField({key:'warranty',label:'Warranty',value:q.warranty})}
+    ${!isNew && variance!=null?`<div class="field"><label>Variance (calculated)</label><input value="${fmtMoney(variance)+' ('+variancePct.toFixed(1)+'%)'}" readonly></div>`:''}
+    ${formField({key:'notes',label:'Notes',value:q.notes,type:'textarea',full:true})}
+  </div>`;
+  const foot = editable ? `<button class="btn" data-action="drawer-discard">Discard</button>${!isNew?`<button class="btn btn-danger" data-action="drawer-delete" data-id="quotes|${esc(q.id)}">Delete</button>`:''}<button class="btn btn-primary" data-action="drawer-save-quote" data-id="${isNew?'':esc(q.id)}">Save</button>` : `<button class="btn btn-block" data-action="drawer-discard">Close</button>`;
+  openDrawer({title:isNew?'Add quote':q.description, sub:isNew?'Track a new quote request.':'Reference '+q.ref+' · '+q.contractor, body, foot});
+  disableIfReadOnly(editable);
+}
+ACTIONS['drawer-save-quote']=(id)=>{
+  const isNew=!id;
+  const rec={ id:isNew?uid('Q'):id, ref:isNew?('Q-'+TODAY.getFullYear()+'-'+String(DB.quotes.length+1).padStart(3,'0')):id && DB.quotes.find(x=>x.id===id).ref,
+    contractor:readField('contractor'), description:readField('description'), assetId:readField('assetId'), category:readField('category'),
+    dateRequested:readField('dateRequested'), dateReceived:readField('dateReceived'), exVat:readField('exVat'), vat:readField('vat'),
+    validUntil:readField('validUntil'), status:readField('status'), decisionDate:readField('decisionDate'), approvalRef:readField('approvalRef'),
+    rationale:readField('rationale'), invoiced:readField('invoiced'), invoiceAmount:readField('invoiceAmount'), invoiceDate:readField('invoiceDate'),
+    paymentDate:readField('paymentDate'), warranty:readField('warranty'), notes:readField('notes') };
+  if(!rec.description.trim()){ toast('Description is required', 'error'); return; }
+  if(isNew) DB.quotes.push(rec); else { const idx=DB.quotes.findIndex(x=>x.id===id); rec.ref=DB.quotes[idx].ref; DB.quotes[idx]=rec; }
+  saveDB(); closeDrawer(); toast('Quote saved', 'success'); refreshCurrentTab();
+};
+const QUOTE_STATUS_COLOR = {Requested:'var(--st-nodate)', Chased:'var(--st-duesoon)', Received:'var(--st-watch)', 'Under review':'var(--st-quote)', Accepted:'var(--st-compliant)', Rejected:'var(--st-overdue)', Expired:'var(--st-overdue)', Completed:'var(--st-compliant)'};
+function quoteStatusPill(s){ return '<span class="pill" style="color:'+QUOTE_STATUS_COLOR[s]+'"><span class="pill-dot" style="background:'+QUOTE_STATUS_COLOR[s]+'"></span>'+s+'</span>'; }
+TABLE_CFG.quotes = function(){ return {
+  tabKey:'quotes', data:()=>DB.quotes, idOf:r=>r.id, editable:canEditTab('quotes'), searchPlaceholder:'Search quotes…',
+  searchText:r=>[r.ref,r.description,r.contractor,r.category].join(' '),
+  filters:[{key:'all',label:'All'},{key:'open',label:'Open'},{key:'Accepted',label:'Accepted'},{key:'Rejected',label:'Rejected'},{key:'Completed',label:'Completed'}],
+  matchesFilter:(r,f)=> f==='all'?true: f==='open'?['Requested','Chased','Received','Under review'].includes(r.status): r.status===f,
+  columns:[
+    {label:'Ref',get:r=>esc(r.ref)},{label:'Description',get:r=>esc(r.description),wrap:true},{label:'Contractor',get:r=>esc(r.contractor)},
+    {label:'Category',get:r=>esc(r.category)},{label:'Status',get:r=>quoteStatusPill(r.status)},{label:'Total',get:r=>fmtMoney(quoteTotal(r))},{label:'Valid until',get:r=>fmtDate(r.validUntil)}
+  ],
+  exportColumns:[{label:'Ref',get:r=>r.ref},{label:'Description',get:r=>r.description},{label:'Contractor',get:r=>r.contractor},{label:'Asset',get:r=>r.assetId},
+    {label:'Category',get:r=>r.category},{label:'Date requested',get:r=>r.dateRequested},{label:'Date received',get:r=>r.dateReceived},{label:'Ex VAT',get:r=>r.exVat},
+    {label:'VAT',get:r=>r.vat},{label:'Total',get:r=>quoteTotal(r)},{label:'Valid until',get:r=>r.validUntil},{label:'Status',get:r=>r.status},{label:'Decision date',get:r=>r.decisionDate},
+    {label:'Rationale',get:r=>r.rationale},{label:'Approval ref',get:r=>r.approvalRef},{label:'Invoiced',get:r=>r.invoiced},{label:'Invoice amount',get:r=>r.invoiceAmount},
+    {label:'Invoice date',get:r=>r.invoiceDate},{label:'Payment date',get:r=>r.paymentDate},{label:'Warranty',get:r=>r.warranty},{label:'Variance',get:r=>quoteVariance(r)},{label:'Notes',get:r=>r.notes}],
+  onAdd:()=>openQuoteDrawer(null), onRowClick:rid=>openQuoteDrawer(rid), remove:rid=>{ DB.quotes=DB.quotes.filter(x=>x.id!==rid); }
+};};
+RENDERERS.quotes = ()=>renderRecordTable(TABLE_CFG.quotes());
+ACTIONS.openquote = (id)=>openQuoteDrawer(id);
+
+/* ---- Contractors ---- */
+function openContractorDrawer(id){
+  const isNew=!id;
+  const editable=canEditTab('contractors');
+  const c = isNew ? {id:'',company:'',trade:'',contactName:'',phone:'',email:'',address:'',accreditations:'',insuranceExpiry:'',rates:'',notes:''} : DB.contractors.find(x=>x.id===id);
+  const body = `<div class="form-grid">
+    ${formField({key:'company',label:'Company',value:c.company,full:true})}
+    ${formField({key:'trade',label:'Trade',value:c.trade})}
+    ${formField({key:'contactName',label:'Contact name',value:c.contactName})}
+    ${formField({key:'phone',label:'Phone',value:c.phone})}
+    ${formField({key:'email',label:'Email',value:c.email,type:'email'})}
+    ${formField({key:'insuranceExpiry',label:'Insurance expiry',value:c.insuranceExpiry,type:'date'})}
+    ${formField({key:'address',label:'Address',value:c.address,full:true})}
+    ${formField({key:'accreditations',label:'Accreditations',value:c.accreditations,full:true})}
+    ${formField({key:'rates',label:'Rates',value:c.rates,full:true})}
+    ${formField({key:'notes',label:'Notes',value:c.notes,type:'textarea',full:true})}
+  </div>`;
+  const foot = editable ? `<button class="btn" data-action="drawer-discard">Discard</button>${!isNew?`<button class="btn btn-danger" data-action="drawer-delete" data-id="contractors|${esc(c.id)}">Delete</button>`:''}<button class="btn btn-primary" data-action="drawer-save-contractor" data-id="${isNew?'':esc(c.id)}">Save</button>` : `<button class="btn btn-block" data-action="drawer-discard">Close</button>`;
+  openDrawer({title:isNew?'Add contractor':c.company, sub:isNew?'Add an approved contractor or supplier.':c.trade, body, foot});
+  disableIfReadOnly(editable);
+}
+ACTIONS['drawer-save-contractor']=(id)=>{
+  const isNew=!id;
+  const rec={ id:isNew?uid('C'):id, company:readField('company'), trade:readField('trade'), contactName:readField('contactName'), phone:readField('phone'),
+    email:readField('email'), insuranceExpiry:readField('insuranceExpiry'), address:readField('address'), accreditations:readField('accreditations'),
+    rates:readField('rates'), notes:readField('notes') };
+  if(!rec.company.trim()){ toast('Company name is required', 'error'); return; }
+  if(isNew) DB.contractors.push(rec); else { const idx=DB.contractors.findIndex(x=>x.id===id); DB.contractors[idx]=rec; }
+  saveDB(); closeDrawer(); toast('Contractor saved', 'success'); refreshCurrentTab();
+};
+TABLE_CFG.contractors = function(){ return {
+  tabKey:'contractors', data:()=>DB.contractors, idOf:r=>r.id, editable:canEditTab('contractors'), searchPlaceholder:'Search contractors…',
+  searchText:r=>[r.company,r.trade,r.contactName,r.email].join(' '),
+  filters:[{key:'all',label:'All'},{key:'insdue',label:'Insurance expiring soon'}],
+  matchesFilter:(r,f)=> f==='insdue'? ['overdue','duesoon'].includes(statusFromDate(r.insuranceExpiry)) : true,
+  columns:[
+    {label:'Company',get:r=>esc(r.company)},{label:'Trade',get:r=>esc(r.trade)},{label:'Contact',get:r=>esc(r.contactName)},{label:'Phone',get:r=>esc(r.phone)},
+    {label:'Insurance expiry',get:r=>fmtDate(r.insuranceExpiry)+' '+statusPill(statusFromDate(r.insuranceExpiry))}
+  ],
+  exportColumns:[{label:'Company',get:r=>r.company},{label:'Trade',get:r=>r.trade},{label:'Contact',get:r=>r.contactName},{label:'Phone',get:r=>r.phone},
+    {label:'Email',get:r=>r.email},{label:'Address',get:r=>r.address},{label:'Accreditations',get:r=>r.accreditations},{label:'Insurance expiry',get:r=>r.insuranceExpiry},
+    {label:'Rates',get:r=>r.rates},{label:'Notes',get:r=>r.notes}],
+  onAdd:()=>openContractorDrawer(null), onRowClick:rid=>openContractorDrawer(rid), remove:rid=>{ DB.contractors=DB.contractors.filter(x=>x.id!==rid); }
+};};
+RENDERERS.contractors = ()=>renderRecordTable(TABLE_CFG.contractors());
+
+function toast(msg, type, actionLabel, actionFn){
+  const t=document.createElement('div');
+  t.className='toast glass';
+  t.style.color = type==='error' ? '#ff9296' : (type==='success' ? '#7fe0a0' : 'var(--text)');
+  const span=document.createElement('span'); span.textContent=msg; t.appendChild(span);
+  if(actionLabel && actionFn){
+    const b=document.createElement('button'); b.className='btn btn-sm'; b.textContent=actionLabel; b.style.color='var(--text)';
+    b.onclick=()=>{ actionFn(); t.remove(); };
+    t.appendChild(b);
+  }
+  document.getElementById('toast-stack').appendChild(t);
+  setTimeout(()=>{ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, actionLabel?5000:2600);
+}
+
+let LAST_REMOVED_ASSETS=null;
+UI.addasset.draft = {category:CATEGORY_LIST[0], location:'', contractor:DB.contractors[0]?DB.contractors[0].company:'', responsible:'Facilities Manager'};
+
+function renderAddAsset(){
+  const aa=UI.addasset;
+  const isSample = DB.meta && DB.meta.sampleDataLoaded && DB.assets.some(a=>(DB.meta.sampleAssetIds||[]).includes(a.id));
+  document.getElementById('content').innerHTML = `
+    ${isSample ? `<div class="glass remove-banner">${ICONS.warn}
+      <div style="flex:1;"><b>Sample data loaded.</b> This register includes 51 example assets to help you explore CCI CAFM. Remove them whenever you are ready to add your own.</div>
+      <button class="btn btn-danger" data-action="aa-remove-samples">Remove all sample assets</button>
+    </div>` : ''}
+    <div class="mode-toggle glass">
+      <button class="mode-btn ${aa.mode==='single'?'active':''}" data-action="aa-mode" data-id="single">One at a time</button>
+      <button class="mode-btn ${aa.mode==='paste'?'active':''}" data-action="aa-mode" data-id="paste">Paste a list</button>
+    </div>
+    <div id="aa-body"></div>
+    <div class="quick-add-row">
+      <button class="btn glass" data-action="aa-quick" data-id="maintenance">${ICONS.maintenance} Add maintenance task</button>
+      <button class="btn glass" data-action="aa-quick" data-id="quotes">${ICONS.quotes} Add quote</button>
+      <button class="btn glass" data-action="aa-quick" data-id="contractors">${ICONS.contractors} Add contractor</button>
+      <button class="btn glass" data-action="aa-quick" data-id="renewals">${ICONS.renewals} Add renewal</button>
+    </div>
+  `;
+  if(aa.mode==='single') renderAddAssetSingle(); else renderAddAssetPaste();
+}
+function renderAddAssetSingle(){
+  const aa=UI.addasset;
+  const d=aa.draft;
+  document.getElementById('aa-body').innerHTML = `
+    <div class="glass card">
+      <div class="form-grid">
+        <div class="field"><label>Asset ID</label><input id="f_id" value="${esc(nextAssetId(d.category))}" readonly></div>
+        <div class="field"><label>Category</label><select id="f_category">${CATEGORY_LIST.map(c=>`<option ${c===d.category?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+        ${formField({key:'subCategory',label:'Sub-category',value:''})}
+        ${formField({key:'description',label:'Description',value:'',full:true})}
+        ${formField({key:'make',label:'Make',value:''})}
+        ${formField({key:'model',label:'Model',value:''})}
+        ${formField({key:'serial',label:'Serial number',value:''})}
+        ${formField({key:'location',label:'Location',value:d.location})}
+        ${formField({key:'subLocation',label:'Sub-location',value:''})}
+        ${formField({key:'quantity',label:'Quantity',value:1,type:'number'})}
+        ${formField({key:'installDate',label:'Install date',value:'',type:'date'})}
+        ${formField({key:'purchaseCost',label:'Purchase cost (£)',value:'',type:'number',step:'0.01'})}
+        ${formField({key:'lifeYears',label:'Expected life (years)',value:'',type:'number'})}
+        ${formField({key:'replacementCost',label:'Replacement cost (£)',value:'',type:'number',step:'0.01'})}
+        ${formField({key:'warrantyExpiry',label:'Warranty expiry',value:'',type:'date'})}
+        <div class="field"><label>Condition</label><select id="f_condition">${[1,2,3,4,5].map(n=>`<option value="${n}" ${n===3?'selected':''}>${n} — ${['Very poor','Poor','Fair','Good','Excellent'][n-1]}</option>`).join('')}</select></div>
+        <div class="field"><label>Criticality</label><select id="f_criticality">${['High','Medium','Low'].map(c=>`<option ${c==='Medium'?'selected':''}>${c}</option>`).join('')}</select></div>
+        <div class="field"><label>Responsible</label><select id="f_responsible">${RESPONSIBLE_OPTIONS.map(r=>`<option ${r===d.responsible?'selected':''}>${esc(r)}</option>`).join('')}</select></div>
+        <div class="field"><label>Contractor</label><select id="f_contractor">${contractorSelectOptions(d.contractor)}</select></div>
+        <div class="field"><label>Statutory</label><select id="f_statutory"><option>No</option><option>Yes</option></select></div>
+        ${formField({key:'notes',label:'Notes',value:'',type:'textarea',full:true})}
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px;">
+        <button class="btn btn-primary" data-action="aa-save" data-id="0">Save</button>
+        <button class="btn" data-action="aa-save" data-id="1">Save and add another</button>
+      </div>
+    </div>
+    <div class="added-list" id="aa-added-list"></div>
+  `;
+  document.getElementById('f_category').addEventListener('change', e=>{ document.getElementById('f_id').value = nextAssetId(e.target.value); });
+  renderAddedList();
+}
+function renderAddedList(){
+  const aa=UI.addasset;
+  const el=document.getElementById('aa-added-list');
+  if(!el) return;
+  if(!aa.addedNow.length){ el.innerHTML=''; return; }
+  el.innerHTML = `<div style="font-size:12.5px;color:var(--text-dim);margin:14px 4px 8px;font-weight:700;">ADDED JUST NOW</div>` +
+    aa.addedNow.slice().reverse().map(id=>{
+      const a=DB.assets.find(x=>x.id===id); if(!a) return '';
+      return `<div class="glass added-item"><b>${esc(a.id)}</b><span>${esc(a.description)}</span><div class="tb-spacer"></div><button class="btn btn-sm" data-action="aa-fillrest" data-id="${esc(a.id)}">Fill in the rest</button></div>`;
+    }).join('');
+}
+function renderAddAssetPaste(){
+  const aa=UI.addasset;
+  document.getElementById('aa-body').innerHTML = `
+    <div class="glass card">
+      <div class="field"><label>Paste one asset per line: description, category, location</label>
+        <textarea id="aa-paste-text" style="min-height:140px;" placeholder="Projector screen, Audio visual and sound, Main Sanctuary">${esc(aa.pasteText||'')}</textarea>
+      </div>
+      <button class="btn" data-action="aa-preview">Preview</button>
+    </div>
+    <div id="aa-preview-area"></div>
+  `;
+  document.getElementById('aa-paste-text').addEventListener('input', e=>{ aa.pasteText=e.target.value; });
+  if(aa.pasteRows && aa.pasteRows.length) renderPastePreview();
+}
+function renderPastePreview(){
+  const aa=UI.addasset;
+  const rows=aa.pasteRows;
+  document.getElementById('aa-preview-area').innerHTML = `
+    <div class="glass preview-table">
+      <div class="table-wrap"><table><thead><tr><th>ID</th><th>Description</th><th>Category</th><th>Location</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr><td><b>${esc(r.id)}</b></td><td>${esc(r.description)}</td><td>${r.categoryValid?esc(r.category):'<span style="color:var(--st-overdue)">'+esc(r.category)+' (unknown)</span>'}</td><td>${esc(r.location)}</td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+    <div style="margin-top:14px;"><button class="btn btn-primary" data-action="aa-commit-paste">Add ${rows.length} assets</button></div>
+  `;
+}
+ACTIONS['aa-mode']=(id)=>{ UI.addasset.mode=id; renderAddAsset(); };
+ACTIONS['aa-quick']=(id)=>{ if(id==='maintenance') openMaintenanceDrawer(null); if(id==='quotes') openQuoteDrawer(null); if(id==='contractors') openContractorDrawer(null); if(id==='renewals') openRenewalDrawer(null); };
+ACTIONS['aa-fillrest']=(id)=>openAssetDrawer(id);
+ACTIONS['aa-save']=(id)=>{
+  const again = id==='1';
+  const category=readField('category');
+  const rec={ id:nextAssetId(category), category, subCategory:readField('subCategory'), description:readField('description'),
+    make:readField('make'), model:readField('model'), serial:readField('serial'), location:readField('location'), subLocation:readField('subLocation'),
+    quantity:readField('quantity'), installDate:readField('installDate'), purchaseCost:readField('purchaseCost'), lifeYears:readField('lifeYears'),
+    replacementCost:readField('replacementCost'), warrantyExpiry:readField('warrantyExpiry'), condition:Number(readField('condition')),
+    criticality:readField('criticality'), responsible:readField('responsible'), contractor:readField('contractor'), statutory:readField('statutory'), lastVerified:'', notes:readField('notes') };
+  if(!rec.description.trim()){ toast('Description is required', 'error'); return; }
+  DB.assets.push(rec); saveDB();
+  UI.addasset.addedNow.push(rec.id);
+  UI.addasset.draft = {category:rec.category, location:rec.location, contractor:rec.contractor, responsible:rec.responsible};
+  toast('Asset '+rec.id+' added', 'success');
+  if(again){ renderAddAssetSingle(); } else { renderAddedList(); document.getElementById('f_description').value=''; }
+  renderTopbar();
+};
+ACTIONS['aa-preview']=()=>{
+  const text=document.getElementById('aa-paste-text').value;
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const counters={};
+  DB.assets.forEach(a=>{ const code=a.id.split('-')[0]; const n=parseInt(a.id.split('-')[1],10); if(!isNaN(n)) counters[code]=Math.max(counters[code]||0,n); });
+  const rows = lines.map(line=>{
+    const parts=line.split(',').map(p=>p.trim());
+    const description=parts[0]||'(no description)';
+    const category=parts[1]||CATEGORY_LIST[0];
+    const location=parts[2]||'';
+    const code=CAT_CODE[category] || 'GEN';
+    counters[code]=(counters[code]||0)+1;
+    return {id:code+'-'+String(counters[code]).padStart(3,'0'), description, category, location, categoryValid: !!CAT_CODE[category]};
+  });
+  UI.addasset.pasteRows=rows;
+  renderPastePreview();
+};
+ACTIONS['aa-commit-paste']=()=>{
+  const rows=UI.addasset.pasteRows;
+  rows.forEach(r=>{
+    DB.assets.push({ id:r.id, category:r.categoryValid?r.category:CATEGORY_LIST[0], subCategory:'', description:r.description, make:'', model:'', serial:'',
+      location:r.location, subLocation:'', quantity:1, installDate:'', purchaseCost:'', lifeYears:'', replacementCost:'', warrantyExpiry:'',
+      condition:3, criticality:'Medium', responsible:'Facilities Manager', contractor:'', statutory:'No', lastVerified:'', notes:'' });
+  });
+  saveDB();
+  toast(rows.length+' assets added', 'success');
+  UI.addasset.pasteRows=[]; UI.addasset.pasteText='';
+  renderAddAsset();
+};
+ACTIONS['aa-remove-samples']=()=>{
+  openModal({title:'Remove sample assets', body:'This removes the 51 example assets that ship with CCI CAFM. You can undo this immediately after.', confirmLabel:'Remove samples', danger:true, onConfirm:()=>{
+    const ids = DB.meta.sampleAssetIds || [];
+    LAST_REMOVED_ASSETS = DB.assets.filter(a=>ids.includes(a.id));
+    DB.assets = DB.assets.filter(a=>!ids.includes(a.id));
+    DB.meta.sampleDataLoaded=false;
+    saveDB();
+    toast(LAST_REMOVED_ASSETS.length+' sample assets removed', 'success', 'Undo', ()=>{
+      DB.assets = DB.assets.concat(LAST_REMOVED_ASSETS); DB.meta.sampleDataLoaded=true; saveDB(); toast('Restored', 'success'); refreshCurrentTab();
+    });
+    refreshCurrentTab();
+  }});
+};
+RENDERERS.addasset = renderAddAsset;
+
+function fyLabel(dateStr){
+  if(!dateStr) return 'Unknown';
+  const d=new Date(dateStr+'T00:00:00');
+  let y=d.getFullYear();
+  if((d.getMonth()+1) < (DB.settings.fyStart||4)) y-=1;
+  return 'FY '+y+'/'+String((y+1)%100).padStart(2,'0');
+}
+function barRow(label, value, max, color){
+  const pct = max>0 ? Math.max(2,Math.round((value/max)*100)) : 0;
+  return `<div class="cost-row"><span>${esc(label)}</span><b>${fmtMoney(value)}</b></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color||'var(--primary)'}"></div></div>`;
+}
+function renderCosts(){
+  const quotes = DB.quotes;
+  const fyMap = {};
+  quotes.forEach(q=>{
+    const fy = fyLabel(q.dateRequested);
+    fyMap[fy] = fyMap[fy] || {quoted:0, committed:0, actual:0};
+    fyMap[fy].quoted += quoteTotal(q);
+    if(['Accepted','Completed'].includes(q.status)) fyMap[fy].committed += quoteTotal(q);
+    if(q.invoiced==='Yes') fyMap[fy].actual += (Number(q.invoiceAmount)||0) + (Number(q.vat)||0);
+  });
+  const fyKeys = Object.keys(fyMap).sort();
+
+  const assetMap={};
+  quotes.forEach(q=>{ if(!q.assetId) return; assetMap[q.assetId]=(assetMap[q.assetId]||0)+quoteTotal(q); });
+  const assetRows = Object.entries(assetMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const assetMax = assetRows.length? assetRows[0][1] : 0;
+
+  const catMap={};
+  quotes.forEach(q=>{ catMap[q.category]=(catMap[q.category]||0)+quoteTotal(q); });
+  const catMax = Math.max(1,...Object.values(catMap));
+
+  const reactive = quotes.filter(q=>q.category==='Reactive').reduce((s,q)=>s+quoteTotal(q),0);
+  const planned = quotes.filter(q=>q.category==='Planned').reduce((s,q)=>s+quoteTotal(q),0);
+  const ratioTotal = reactive+planned;
+  const reactivePct = ratioTotal? Math.round((reactive/ratioTotal)*100) : 0;
+  let commentary;
+  if(ratioTotal===0) commentary='No reactive or planned spend recorded yet.';
+  else if(reactivePct>=60) commentary='Reactive spend dominates ('+reactivePct+'%). Consider investing more in planned maintenance to reduce emergency callouts.';
+  else if(reactivePct<=35) commentary='Planned spend dominates ('+(100-reactivePct)+'%) — a healthy sign of proactive facilities management.';
+  else commentary='A reasonable balance between reactive and planned spend ('+reactivePct+'% reactive).';
+
+  const withInvoice = quotes.filter(q=>q.invoiceAmount!=='' && q.invoiceAmount!=null);
+  const variances = withInvoice.map(q=>quoteVariance(q));
+  const avgVar = variances.length? variances.reduce((a,b)=>a+b,0)/variances.length : 0;
+  const overBudget = variances.filter(v=>v>0).length;
+  const underBudget = variances.filter(v=>v<0).length;
+  const totalVar = variances.reduce((a,b)=>a+b,0);
+
+  const contMap={};
+  quotes.forEach(q=>{
+    if(!q.contractor) return;
+    contMap[q.contractor] = contMap[q.contractor] || {jobs:0, spend:0, variances:[]};
+    contMap[q.contractor].jobs++;
+    contMap[q.contractor].spend += quoteTotal(q);
+    const v=quoteVariance(q); if(v!=null) contMap[q.contractor].variances.push(v);
+  });
+  const contRows = Object.entries(contMap).sort((a,b)=>b[1].spend-a[1].spend);
+
+  document.getElementById('content').innerHTML = `
+    <div class="cost-grid">
+      <div class="glass cost-card">
+        <h3>Spend by financial year</h3>
+        ${fyKeys.length? fyKeys.map(fy=>`<div style="margin-bottom:10px;"><div style="font-size:12px;font-weight:700;margin-bottom:4px;">${fy}</div>
+          <div class="cost-row"><span>Quoted</span><b>${fmtMoney(fyMap[fy].quoted)}</b></div>
+          <div class="cost-row"><span>Committed</span><b>${fmtMoney(fyMap[fy].committed)}</b></div>
+          <div class="cost-row"><span>Actual</span><b>${fmtMoney(fyMap[fy].actual)}</b></div></div>`).join('') : '<div style="color:var(--text-dim);font-size:12.5px;">No quotes recorded yet.</div>'}
+      </div>
+      <div class="glass cost-card">
+        <h3>Spend by asset</h3>
+        ${assetRows.length? assetRows.map(([id,val])=>{ const a=DB.assets.find(x=>x.id===id); return barRow((a?a.description:id), val, assetMax, 'var(--primary)'); }).join('') : '<div style="color:var(--text-dim);font-size:12.5px;">No asset-linked spend yet.</div>'}
+      </div>
+      <div class="glass cost-card">
+        <h3>Spend by category</h3>
+        ${Object.keys(catMap).length? Object.entries(catMap).map(([c,v])=>barRow(c,v,catMax,'#5b8def')).join('') : '<div style="color:var(--text-dim);font-size:12.5px;">No data yet.</div>'}
+      </div>
+      <div class="glass cost-card">
+        <h3>Reactive vs planned</h3>
+        ${barRow('Reactive', reactive, Math.max(reactive,planned,1), 'var(--st-overdue)')}
+        ${barRow('Planned', planned, Math.max(reactive,planned,1), 'var(--st-compliant)')}
+        <p style="font-size:12.5px;color:var(--text-dim);margin-top:12px;line-height:1.5;">${commentary}</p>
+      </div>
+      <div class="glass cost-card">
+        <h3>Quote vs invoice variance</h3>
+        <div class="cost-row"><span>Quotes invoiced</span><b>${withInvoice.length}</b></div>
+        <div class="cost-row"><span>Total variance</span><b>${fmtMoney(totalVar)}</b></div>
+        <div class="cost-row"><span>Average variance</span><b>${fmtMoney(avgVar)}</b></div>
+        <div class="cost-row"><span>Over budget</span><b>${overBudget}</b></div>
+        <div class="cost-row"><span>Under / on budget</span><b>${underBudget + (withInvoice.length-overBudget-underBudget)}</b></div>
+      </div>
+      <div class="glass cost-card">
+        <h3>Contractor summary</h3>
+        ${contRows.length? contRows.map(([name,d])=>`<div class="cost-row"><span>${esc(name)} <span style="color:var(--text-dim)">(${d.jobs} jobs)</span></span><b>${fmtMoney(d.spend)}</b></div>`).join('') : '<div style="color:var(--text-dim);font-size:12.5px;">No data yet.</div>'}
+      </div>
+    </div>
+  `;
+}
+RENDERERS.costs = renderCosts;
+
+function renderAppearance(){
+  const a=DB.appearance;
+  document.getElementById('content').innerHTML = `
+    <div class="appearance-grid">
+      <div class="glass card">
+        <h3 style="margin-bottom:12px;">Colour scheme</h3>
+        <div class="swatch-row">
+          ${Object.entries(APPEARANCE_PRESETS).map(([key,p])=>`<div class="swatch ${a.preset===key && !a.accent?'selected':''} ${a.preset===key?'selected':''}" title="${p.label}" style="background:linear-gradient(135deg,${p.primary},${p.header})" data-action="app-preset" data-id="${key}"></div>`).join('')}
+        </div>
+        <div style="margin-top:14px;">
+          <label style="font-size:12px;color:var(--text-dim);font-weight:600;">Custom accent colour</label><br>
+          <input type="color" id="app-accent" value="${a.accent||APPEARANCE_PRESETS[a.preset].primary}" style="margin-top:8px;width:60px;height:36px;border-radius:8px;border:none;background:none;">
+        </div>
+      </div>
+      <div class="glass card">
+        <h3 style="margin-bottom:12px;">Status colours</h3>
+        <div class="opt-pill-row">
+          <button class="opt-pill ${a.statusSet==='standard'?'selected':''}" data-action="app-set" data-id="statusSet|standard">Standard (red/amber/green)</button>
+          <button class="opt-pill ${a.statusSet==='accessible'?'selected':''}" data-action="app-set" data-id="statusSet|accessible">Accessible (blue/orange)</button>
+        </div>
+        <h3 style="margin:18px 0 12px;">Font</h3>
+        <div class="opt-pill-row">
+          ${Object.entries(FONT_SETS).map(([k,f])=>`<button class="opt-pill ${a.fontSet===k?'selected':''}" data-action="app-set" data-id="fontSet|${k}">${f.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="glass card">
+        <h3 style="margin-bottom:12px;">Text size</h3>
+        <div class="opt-pill-row">
+          ${Object.keys(TEXT_SIZES).map(k=>`<button class="opt-pill ${a.textSize===k?'selected':''}" data-action="app-set" data-id="textSize|${k}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}
+        </div>
+        <h3 style="margin:18px 0 12px;">Row spacing</h3>
+        <div class="opt-pill-row">
+          ${Object.keys(ROW_SPACINGS).map(k=>`<button class="opt-pill ${a.rowSpacing===k?'selected':''}" data-action="app-set" data-id="rowSpacing|${k}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}
+        </div>
+        <h3 style="margin:18px 0 12px;">Corner radius</h3>
+        <div class="opt-pill-row">
+          ${Object.keys(RADII).map(k=>`<button class="opt-pill ${a.radius===k?'selected':''}" data-action="app-set" data-id="radius|${k}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="glass card" style="margin-top:16px;">
+      <h3 style="margin-bottom:12px;">Church identity</h3>
+      <div class="form-grid">
+        <div class="field"><label>Church name</label><input id="app-churchname" value="${esc(a.churchName)}"></div>
+        <div class="field"><label>Strapline</label><input id="app-strapline" value="${esc(a.strapline)}"></div>
+      </div>
+      <div style="margin-top:14px;">
+        <label style="font-size:12px;color:var(--text-dim);font-weight:600;">Logo (max 400KB)</label>
+        <div class="logo-drop" id="app-logo-drop" style="margin-top:8px;">
+          ${a.logo? '<img src="'+a.logo+'" style="max-height:60px;border-radius:10px;">' : 'Click to upload a logo image'}
+        </div>
+        <input type="file" id="app-logo-input" accept="image/*" hidden>
+      </div>
+    </div>
+    <div style="margin-top:18px;"><button class="btn btn-danger" data-action="app-reset">${ICONS.reset} Reset appearance to defaults</button></div>
+  `;
+  document.getElementById('app-accent').addEventListener('input', e=>{ DB.appearance.accent=e.target.value; saveDB(); applyAppearance(); });
+  document.getElementById('app-churchname').addEventListener('input', e=>{ DB.appearance.churchName=e.target.value; saveDB(); applyAppearance(); });
+  document.getElementById('app-strapline').addEventListener('input', e=>{ DB.appearance.strapline=e.target.value; saveDB(); applyAppearance(); });
+  document.getElementById('app-logo-drop').addEventListener('click', ()=>document.getElementById('app-logo-input').click());
+  document.getElementById('app-logo-input').addEventListener('change', e=>{
+    const file=e.target.files[0]; if(!file) return;
+    if(file.size>400*1024){ toast('Logo must be under 400KB', 'error'); return; }
+    const reader=new FileReader();
+    reader.onload=()=>{ DB.appearance.logo=reader.result; saveDB(); applyAppearance(); renderAppearance(); };
+    reader.readAsDataURL(file);
+  });
+}
+ACTIONS['app-preset']=(id)=>{ DB.appearance.preset=id; DB.appearance.accent=''; DB.appearance.header=''; saveDB(); applyAppearance(); renderAppearance(); };
+ACTIONS['app-set']=(id)=>{ const [key,val]=id.split('|'); DB.appearance[key]=val; saveDB(); applyAppearance(); renderAppearance(); refreshSidebarActiveStyles(); };
+ACTIONS['app-reset']=()=>{
+  openModal({title:'Reset appearance', body:'This restores the default CCI colour scheme, fonts and layout settings.', confirmLabel:'Reset', danger:true, onConfirm:()=>{
+    DB.appearance = { preset:'cci', accent:'', header:'', statusSet:'standard', fontSet:'system', textSize:'medium', rowSpacing:'comfortable', radius:'rounded', churchName:'Christ Church International', strapline:'Facilities Management', logo:'' };
+    saveDB(); applyAppearance(); renderAppearance(); toast('Appearance reset', 'success');
+  }});
+};
+function refreshSidebarActiveStyles(){ renderNav(); }
+RENDERERS.appearance = renderAppearance;
+
+function renderUsers(){
+  document.getElementById('content').innerHTML = `
+    <div style="margin-bottom:16px;"><button class="btn btn-primary" data-action="user-add">${ICONS.plus} Add user</button></div>
+    <div class="user-grid">
+      ${AUTH.users.map(u=>`<div class="glass user-card">
+        <div class="avatar">${esc(u.initials)}</div>
+        <div style="font-weight:700;font-size:14px;">${esc(u.name)}</div>
+        <span class="role-badge ${u.role}">${u.role}</span>
+        ${u.mustChangePin?'<div class="pin-warn">Must change PIN on next login</div>':''}
+        <div class="user-card-actions">
+          <button class="btn btn-sm" style="flex:1;" data-action="user-edit" data-id="${esc(u.id)}">${ICONS.edit} Edit</button>
+          <button class="btn btn-sm btn-danger" data-action="user-remove" data-id="${esc(u.id)}">${ICONS.trash}</button>
+        </div>
+      </div>`).join('')}
+    </div>
+  `;
+}
+function openUserDrawer(id){
+  const isNew=!id;
+  const u = isNew ? {id:'',name:'',initials:'',pin:'',role:'Staff',mustChangePin:true,permissions:{}} : AUTH.users.find(x=>x.id===id);
+  const roleVal = isNew ? 'staff' : u.role;
+  const body = `<div class="form-grid">
+    ${formField({key:'name',label:'Name',value:u.name,full:true})}
+    ${formField({key:'initials',label:'Initials',value:u.initials})}
+    ${formField({key:'pin',label:'PIN (4–8 digits)',value:u.pin,type:'text'})}
+    <div class="field"><label>Role</label><select id="f_role"><option value="admin" ${roleVal==='admin'?'selected':''}>Admin</option><option value="staff" ${roleVal==='staff'?'selected':''}>Staff</option></select></div>
+    <div class="field full"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="f_mustChange" ${u.mustChangePin?'checked':''} style="width:auto;"> Must change PIN on next login</label></div>
+    <div class="field full" id="perm-section" ${roleVal==='admin'?'hidden':''}>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <label>Permissions</label>
+        <div style="display:flex;gap:6px;"><button type="button" class="btn btn-sm" data-action="user-tickall">Tick all</button><button type="button" class="btn btn-sm" data-action="user-untickall">Untick all</button></div>
+      </div>
+      <div class="perm-grid">
+        ${PERMISSION_KEYS.map(p=>`<label class="perm-item"><input type="checkbox" id="perm_${p.key}" ${u.permissions&&u.permissions[p.key]?'checked':''} style="width:auto;"> ${p.label}</label>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  const canDelete = !isNew && u.id!=='u_admin' && u.id!==SESSION.id;
+  const foot = `<button class="btn" data-action="drawer-discard">Discard</button>${canDelete?`<button class="btn btn-danger" data-action="user-delete" data-id="${esc(u.id)}">Delete</button>`:''}<button class="btn btn-primary" data-action="user-save" data-id="${isNew?'':esc(u.id)}">Save</button>`;
+  openDrawer({title:isNew?'Add user':u.name, sub:isNew?'Create a new staff or admin account.':'Manage access for '+u.name, body, foot});
+  document.getElementById('f_role').addEventListener('change', e=>{ document.getElementById('perm-section').hidden = e.target.value==='admin'; });
+}
+ACTIONS['user-add']=()=>openUserDrawer(null);
+ACTIONS['user-edit']=(id)=>openUserDrawer(id);
+ACTIONS['user-tickall']=()=>{ PERMISSION_KEYS.forEach(p=>{ const el=document.getElementById('perm_'+p.key); if(el) el.checked=true; }); };
+ACTIONS['user-untickall']=()=>{ PERMISSION_KEYS.forEach(p=>{ const el=document.getElementById('perm_'+p.key); if(el) el.checked=false; }); };
+ACTIONS['user-remove']=(id)=>{
+  const u=AUTH.users.find(x=>x.id===id);
+  if(id==='u_admin'){ toast('The default administrator cannot be removed', 'error'); return; }
+  if(id===SESSION.id){ toast('You cannot remove your own account while signed in', 'error'); return; }
+  openModal({title:'Remove user', body:'Remove '+esc(u.name)+'? They will no longer be able to sign in.', confirmLabel:'Remove', danger:true, onConfirm:()=>{
+    AUTH.users = AUTH.users.filter(x=>x.id!==id); saveAuth(); toast('User removed', 'success'); renderUsers();
+  }});
+};
+ACTIONS['user-delete']=(id)=>{ ACTIONS['user-remove'](id); closeDrawer(); };
+ACTIONS['user-save']=(id)=>{
+  const isNew=!id;
+  const name=readField('name').trim();
+  const pin=readField('pin').trim();
+  if(!name){ toast('Name is required', 'error'); return; }
+  if(!/^[0-9]{4,8}$/.test(pin)){ toast('PIN must be 4-8 digits only', 'error'); return; }
+  const role=readField('role');
+  const perms={};
+  if(role==='staff') PERMISSION_KEYS.forEach(p=>{ const el=document.getElementById('perm_'+p.key); perms[p.key]=el?el.checked:false; });
+  const rec={ id:isNew?uid('u'):id, name, initials:readField('initials')||name.slice(0,2).toUpperCase(), pin, role, mustChangePin:document.getElementById('f_mustChange').checked, permissions:perms };
+  if(isNew) AUTH.users.push(rec); else { const idx=AUTH.users.findIndex(x=>x.id===id); AUTH.users[idx]=rec; if(SESSION && SESSION.id===id) SESSION=rec; }
+  saveAuth(); closeDrawer(); toast('User saved', 'success'); renderUsers(); renderUserWidget();
+};
+RENDERERS.users = renderUsers;
+
+const STATUTORY_QUESTIONS = [
+  'Does the building have its own gas supply and boiler, or is it supplied by a third party?',
+  'Is there a current Fire Risk Assessment for every building on the site?',
+  'Are there any areas of the building known or presumed to contain asbestos-containing materials?',
+  'Does the church have any higher-risk water systems for legionella (spray outlets, infrequently used showers, storage tanks)?',
+  'Is there a passenger or platform lift on site requiring LOLER thorough examination?',
+  'Are there any pressure systems (steam boilers, compressors, autoclaves) requiring a written scheme of examination?',
+  'Does the site have its own electrical substation or high-voltage equipment?',
+  'Are there listed building or conservation area restrictions affecting maintenance and alteration work?',
+  'Is the building used for regulated activities (childcare, food preparation, first aid) requiring additional certification?',
+  'Is there a defibrillator on site, and who is responsible for checking and maintaining it?',
+  'Are there any trees on site subject to Tree Preservation Orders or within a conservation area?',
+  'Is there a working-at-height risk (tower, bell chamber, roof access) requiring specific safe systems of work?',
+  'Does the church have its own car park requiring separate public liability and maintenance considerations?',
+  'Are there any underground fuel tanks or oil storage on the site?',
+  'Is a lightning protection system installed, and when was it last tested?',
+  'Are there any confined spaces on site (plant rooms, tanks, crypts, roof voids)?',
+  'Does the building have a bell tower or bells requiring separate structural inspection?',
+  'Are external hirers permitted to bring their own equipment, and is this covered by the church\'s risk assessments?'
+];
+function renderGuide(){
+  const s=DB.settings;
+  document.getElementById('content').innerHTML = `
+    <div class="guide-prose">
+      <h3>Adding an asset</h3>
+      <p>Go to <b>Add Asset</b> in the sidebar. Choose <i>One at a time</i> for a single item — pick a category and the asset ID is generated automatically. Use <i>Paste a list</i> to add several assets at once by typing one per line as <code>description, category, location</code>. You can also add an asset directly from the <b>Asset Register</b> using the Add button.</p>
+      <h3>Logging a maintenance task</h3>
+      <p>Open <b>Maintenance Schedule</b> and click Add, or click any task to edit it. Set the frequency and the date it was last completed — CCI CAFM automatically calculates the next due date and status. Use the <i>Done today</i> button on the Dashboard or inside a task's drawer to log completion quickly.</p>
+      <h3>Adding a quote</h3>
+      <p>Open <b>Quote Tracker</b> and click Add. Record the contractor, cost and validity date. As the quote progresses, update its status through Requested → Received → Accepted (or Rejected). Marking a quote as invoiced and entering the invoice amount lets Cost Analysis calculate the variance automatically.</p>
+      <h3>What the colours mean</h3>
+      <ul>
+        <li><b>Red — Overdue.</b> The due date has passed.</li>
+        <li><b>Amber — Due soon.</b> Within the "soon" threshold below.</li>
+        <li><b>Yellow — Watch.</b> Within the "watch" threshold below.</li>
+        <li><b>Green — Compliant.</b> Not due for some time, or recently completed.</li>
+        <li><b>Grey — No date.</b> No date has been logged yet.</li>
+      </ul>
+      <h3>18 questions to answer before relying on the statutory schedule</h3>
+      <p>The pre-loaded maintenance schedule covers common statutory duties for a place of worship in England, but every building is different. Work through these questions with your facilities team before treating the schedule as complete:</p>
+      <ol>${STATUTORY_QUESTIONS.map(q=>`<li>${esc(q)}</li>`).join('')}</ol>
+    </div>
+
+    <h3 style="margin-top:8px;">Settings</h3>
+    <div class="settings-num-grid">
+      <div class="field"><label>Financial year start (month)</label><input type="number" min="1" max="12" id="set-fyStart" value="${s.fyStart}"></div>
+      <div class="field"><label>Due soon threshold (days)</label><input type="number" min="1" id="set-soon" value="${s.soon}"></div>
+      <div class="field"><label>Watch threshold (days)</label><input type="number" min="1" id="set-watch" value="${s.watch}"></div>
+      <div class="field"><label>Contract lead time (days)</label><input type="number" min="0" id="set-lead" value="${s.lead}"></div>
+    </div>
+
+    <h3>Data</h3>
+    <div class="glass card">
+      <p style="font-size:12.5px;color:var(--text-dim);">Back up your data regularly. Backups include all records and appearance settings, but never sign-in details.</p>
+      <div class="data-actions">
+        <button class="btn btn-primary" data-action="guide-backup">${ICONS.download} Back up to file</button>
+        <button class="btn" data-action="guide-restore-btn">${ICONS.upload} Restore from file</button>
+        <input type="file" id="guide-restore-input" accept="application/json" hidden>
+        <button class="btn" data-action="guide-print">${ICONS.print} Print</button>
+      </div>
+      <div class="danger-zone glass" style="margin-top:18px;">
+        <b style="color:#ff9296;">Danger zone</b>
+        <p style="font-size:12.5px;color:var(--text-dim);margin:6px 0 12px;">This replaces all current records with the original CCI CAFM sample data. This cannot be undone.</p>
+        <button class="btn btn-danger" data-action="guide-restart">Start again with sample data</button>
+      </div>
+    </div>
+  `;
+  ['fyStart','soon','watch','lead'].forEach(key=>{
+    document.getElementById('set-'+key).addEventListener('change', e=>{
+      const v=Number(e.target.value); if(!isNaN(v)){ DB.settings[key]=v; saveDB(); toast('Settings updated', 'success'); refreshCurrentTab(); }
+    });
+  });
+  document.getElementById('guide-restore-input').addEventListener('change', e=>{
+    const file=e.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const data=JSON.parse(reader.result);
+        if(!data.assets || !data.maintenance){ toast('This does not look like a CCI CAFM backup file', 'error'); return; }
+        DB = data; saveDB(); applyAppearance(); toast('Data restored from backup', 'success'); startApp(false);
+      }catch(err){ toast('Could not read backup file', 'error'); }
+    };
+    reader.readAsText(file);
+  });
+}
+ACTIONS['guide-backup']=()=>{
+  const blob=new Blob([JSON.stringify(DB,null,2)], {type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='cci-cafm-backup-'+iso(TODAY)+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Backup downloaded', 'success');
+};
+ACTIONS['guide-restore-btn']=()=>document.getElementById('guide-restore-input').click();
+ACTIONS['guide-print']=()=>window.print();
+ACTIONS['guide-restart']=()=>{
+  openModal({title:'Start again with sample data', body:'This permanently replaces every asset, maintenance task, renewal, quote and contractor with the original CCI CAFM sample data.', confirmLabel:'Start again', danger:true, onConfirm:()=>{
+    DB = seedDB(); saveDB(); applyAppearance(); toast('Sample data restored', 'success'); startApp(false);
+  }});
+};
+RENDERERS.guide = renderGuide;
+
+function init(){
+  applyAppearance();
+  populateLogin();
+  const sid = localStorage.getItem(LS_SESSION);
+  const existing = sid ? AUTH.users.find(u=>u.id===sid) : null;
+  if(existing){
+    SESSION = existing;
+    startApp(existing.mustChangePin);
+  } else {
+    document.getElementById('login-screen').hidden=false;
+    document.getElementById('app').hidden=true;
+  }
+}
+init();
+</script>
+</body>
+</html>
