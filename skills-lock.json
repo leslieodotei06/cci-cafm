@@ -37,6 +37,12 @@
       "skillPath": "skills/brandkit/SKILL.md",
       "computedHash": "b63012f3c3d21197e0185d3e9cc7ec40c589fb10e0b5a32a561739de31aa3f20"
     },
+    "clone-site": {
+      "source": "cth9191/site-clone",
+      "sourceType": "github",
+      "skillPath": "skills/clone-site/SKILL.md",
+      "computedHash": "373994c6c2ebc784c723670ecf57e9e34104b94227a4c03681ff90eb4a9859b1"
+    },
     "design-taste-frontend": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
@@ -48,6 +54,12 @@
       "sourceType": "github",
       "skillPath": "skills/taste-skill-v1/SKILL.md",
       "computedHash": "d704ab912c4d0ca954ffa858983da755ae4cd5cad9ba22554db5557382f5bd34"
+    },
+    "dom-clone": {
+      "source": "cth9191/site-clone",
+      "sourceType": "github",
+      "skillPath": "skills/dom-clone/SKILL.md",
+      "computedHash": "ccb1d783ba5c788ebc279c6989d0df084cec0abe6f371b4047992845125cd362"
     },
     "emil-design-eng": {
       "source": "emilkowalski/skills",
@@ -133,11 +145,23 @@
       "skillPath": "skills/redesign-skill/SKILL.md",
       "computedHash": "b405eee0e0e80fc243f731d9aa368bca307e356db7e6157d27101d369dac6726"
     },
+    "remix-site": {
+      "source": "cth9191/site-clone",
+      "sourceType": "github",
+      "skillPath": "skills/remix-site/SKILL.md",
+      "computedHash": "c226885ddd6aa2279646e90a9ed4bcfced7806bfd264f95853bc290bf0dd9985"
+    },
     "review-animations": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "skillPath": "skills/review-animations/SKILL.md",
       "computedHash": "b9f669af5ae280c19a592a94611520335a81de25c88f225bf60ae4b2d66c8c7c"
+    },
+    "shader-extract": {
+      "source": "cth9191/site-clone",
+      "sourceType": "github",
+      "skillPath": "skills/shader-extract/SKILL.md",
+      "computedHash": "cd8c5b295d8844ff2e2cbd5ccd17df41ac07acf475928ebedb8d08d444515649"
     },
     "stitch-design-taste": {
       "source": "Leonxlnx/taste-skill",
